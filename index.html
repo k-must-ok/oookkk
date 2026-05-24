@@ -49,14 +49,14 @@ body { display: flex; justify-content: center; align-items: center; }
 .panel { width: 90%; max-width: 420px; max-height: 80vh; background: white; border-radius: 32px; overflow-y: auto; padding: 20px; animation: scaleIn 0.2s ease; box-shadow: 0 20px 35px rgba(0,0,0,0.3); }
 @keyframes scaleIn { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .close-panel { float: right; background: #eee; border: none; width: 30px; height: 30px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 18px; line-height: 1; }
-.card-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f8f8f8; border-radius: 16px; margin: 6px 0; flex-wrap: wrap; margin-left: 24px; }  /* 字卡缩进一格 */
+.card-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f8f8f8; border-radius: 16px; margin: 6px 0; flex-wrap: wrap; margin-left: 24px; }
 .card-item.disabled-card { background: #e9e9e9; opacity: 0.7; text-decoration: line-through; }
 .group-header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #f0f0f0; border-radius: 20px; margin: 6px 0; cursor: pointer; font-weight: 500; flex-wrap: wrap; }
 .group-header.disabled-group { background: #d4d4d4; opacity: 0.75; }
 .disabled-badge { font-size: 11px; background: #aaa; color: white; border-radius: 30px; padding: 2px 8px; margin-left: 6px; }
 .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; margin-top: 12px; }
 .sticker-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 16px; cursor: pointer; background: #f3f3f3; }
-.emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; font-size: 28px; }
+.emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; font-size: 28px; margin-top: 12px; }
 .emoji-grid span { text-align: center; cursor: pointer; background: #f5f5f5; border-radius: 40px; padding: 4px; }
 .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #2c2c2c; color: white; padding: 8px 20px; border-radius: 40px; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s; font-size: 13px; }
 .toast.show { opacity: 1; }
@@ -65,12 +65,12 @@ body { display: flex; justify-content: center; align-items: center; }
 .modal-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; display: flex; justify-content: center; align-items: center; }
 .modal-content { background: #fff; padding: 20px; border-radius: 32px; width: 90%; max-width: 320px; }
 .move-group-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
-/* 按钮容器居右 */
 .action-buttons { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 .toggle-disabled-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; width: 32px; height: 32px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; }
 .edit-btn, .delete-btn-icon, .move-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; width: 32px; height: 32px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; }
 .group-header .action-buttons button, .card-item .action-buttons button { background: rgba(0,0,0,0.05); }
-.card-item .card-text { flex: 1; word-break: break-word; }
+.card-text { flex: 1; word-break: break-word; }
+.batch-emoji-area { margin: 12px 0; padding: 8px; background: #f9f9f9; border-radius: 16px; display: none; }
 </style>
 </head>
 <body>
@@ -126,7 +126,8 @@ async function loadAllData() {
     wordGroups.forEach(g => { if(g.disabled === undefined) g.disabled = false; });
     wordCards.forEach(c => { if(c.disabled === undefined) c.disabled = false; });
     const sets = await dbGetAll('settings')||[]; const map = {}; sets.forEach(s => map[s.key] = s.value);
-    otherName = map['otherName']||'對方'; otherAvatar = map['otherAvatar']||null; 
+    otherName = map['otherName']||'對方'; 
+    otherAvatar = map['otherAvatar']||null;
     autoSendInterval = parseInt(map['autoSendInterval'])||0; minReplyDelay = parseInt(map['minReplyDelay'])||1; maxReplyDelay = parseInt(map['maxReplyDelay'])||5;
     themeColor = map['themeColor']||'#6B7FD6'; topBarColor = map['topBarColor']||'#ffffff'; bottomBarColor = map['bottomBarColor']||'#ffffff'; 
     chatBgColor = map['chatBgColor']||'#EDE9E3'; chatBgImage = map['chatBgImage']||null; bubbleSelf = map['bubbleSelf']||'#D4E6F1'; bubbleOther = map['bubbleOther']||'#ffffff';
@@ -154,17 +155,83 @@ function closePanel() { panelOverlay.classList.remove('active'); panelContent.in
 function openPanel(html) { panelContent.innerHTML = html; panelOverlay.classList.add('active'); }
 panelOverlay.addEventListener('click', e => { if(e.target===panelOverlay) closePanel(); });
 
-// 切换停用 (🚫 符号切换)
 async function toggleCardDisabled(cardId) { const card = wordCards.find(c => c.id === cardId); if(card) { card.disabled = !card.disabled; await dbPut('wordcards', card); window.renderWordCardsView(); showToast(card.disabled ? '字卡已停用' : '字卡已啟用'); } }
 async function toggleGroupDisabled(groupId) { const group = wordGroups.find(g => g.id === groupId); if(group) { group.disabled = !group.disabled; await dbPut('wordgroups', group); window.renderWordCardsView(); showToast(group.disabled ? '分組已停用' : '分組已啟用'); } }
+function toggleGroup(gid) { if(expandedGroups.has(gid)) expandedGroups.delete(gid); else expandedGroups.add(gid); window.renderWordCardsView(); }
 
 window.closePanel = closePanel;
 window.toggleCardDisabled = toggleCardDisabled;
 window.toggleGroupDisabled = toggleGroupDisabled;
+window.toggleGroup = toggleGroup;
 window.sendMessage = sendMessage;
 window.cancelQuote = cancelQuote;
 window.deleteOtherMsg = deleteOtherMsg;
 window.scrollToMessage = scrollToMessage;
+
+// 导入回复库（完美兼容 reply-library 格式）
+window.importFullReplyLibrary = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+    input.onchange = async e => {
+        const file = e.target.files[0]; if(!file) return;
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            let repliesList = data.customReplies || data.replies || [];
+            let emojiList = data.customEmojis || data.emojis || [];
+            let groupsList = data.customReplyGroups || data.groups || [];
+            
+            const existingGroupMap = new Map(wordGroups.map(g => [g.name, g]));
+            const groupNameToId = new Map();
+            for (const g of groupsList) {
+                if (existingGroupMap.has(g.name)) {
+                    groupNameToId.set(g.name, existingGroupMap.get(g.name).id);
+                } else {
+                    const newGroup = { name: g.name, color: g.color || '#6B7FD6', disabled: false };
+                    const newId = await dbPut('wordgroups', newGroup);
+                    newGroup.id = newId;
+                    wordGroups.push(newGroup);
+                    groupNameToId.set(g.name, newId);
+                }
+            }
+            wordGroups = await dbGetAll('wordgroups');
+            const textToGroup = new Map();
+            for (const g of groupsList) {
+                const targetId = groupNameToId.get(g.name);
+                if (g.items && Array.isArray(g.items)) {
+                    for (const item of g.items) textToGroup.set(item, targetId);
+                }
+            }
+            const allTexts = new Set([...repliesList, ...groupsList.flatMap(g => g.items||[])]);
+            let addedCount = 0;
+            for (const txt of allTexts) {
+                if (!wordCards.find(c => c.text === txt)) {
+                    const groupId = textToGroup.get(txt) || null;
+                    const newCard = { text: txt, groupId: groupId, color: null, frequency: 0, disabled: false };
+                    const id = await dbPut('wordcards', newCard);
+                    newCard.id = id;
+                    wordCards.push(newCard);
+                    addedCount++;
+                }
+            }
+            let emojiAdded = 0;
+            for (const em of emojiList) {
+                if (!emojis.some(e => e.char === em)) {
+                    const newEm = { char: em };
+                    const id = await dbPut('emojis', newEm);
+                    newEm.id = id;
+                    emojis.push(newEm);
+                    emojiAdded++;
+                }
+            }
+            await loadAllData();
+            applyTheme();
+            renderChat(false);
+            showToast(`✅ 導入完成！新增字卡 ${addedCount} 個，新增表情 ${emojiAdded} 個`);
+            if (panelOverlay.classList.contains('active')) closePanel();
+        } catch(err) { console.error(err); showToast('導入失敗：JSON 格式錯誤'); }
+    };
+    input.click();
+};
 
 window.openReplyMgmtPanel = () => { 
     openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button>
@@ -173,7 +240,8 @@ window.openReplyMgmtPanel = () => {
     <button class="big-btn" onclick="window.openEmojiPanel()">😀 Emoji庫</button>
     <button class="big-btn" onclick="window.openStickerHubPanel()">🖼️ 表情圖庫</button>
     <button class="big-btn" onclick="window.openReplyRhythmPanel()">⏱️ 回覆節奏</button>
-    <button class="big-btn" onclick="window.openStatsPanel()">📊 字卡統計</button>`);
+    <button class="big-btn" onclick="window.openStatsPanel()">📊 字卡統計</button>
+    <button class="big-btn" style="background:#5f7f9e;" onclick="window.importFullReplyLibrary()">📥 導入完整回覆庫 (JSON)</button>`);
 };
 
 window.openWordCardPanel = () => { 
@@ -189,9 +257,9 @@ window.renderWordCardsView = () => {
     wordGroups.forEach(g => { 
         const cards = wordCards.filter(c=>c.groupId===g.id && (!search || c.text.includes(search))); 
         if(search && cards.length===0) return; 
-        const isOpen = search ? true : expandedGroups.has(g.id); 
+        const isOpen = expandedGroups.has(g.id); 
         const groupDisabledClass = g.disabled ? 'disabled-group' : '';
-        html += `<div class="group-header ${groupDisabledClass}">
+        html += `<div class="group-header ${groupDisabledClass}" data-gid="${g.id}">
                     <span style="background:${g.color};width:16px;height:16px;border-radius:50%"></span>
                     <span>${g.name} (${cards.length})</span>
                     <div class="action-buttons">
@@ -205,7 +273,7 @@ window.renderWordCardsView = () => {
             const cardDisabledClass = c.disabled ? 'disabled-card' : '';
             html+=`<div class="card-item ${cardDisabledClass}">
                         <span style="background:${c.color||g.color};width:14px;height:14px;border-radius:50%"></span>
-                        <span class="card-text">${c.text}</span>
+                        <span class="card-text">${escapeHtml(c.text)}</span>
                         <div class="action-buttons">
                             <button class="toggle-disabled-btn" title="切換停用" onclick="window.toggleCardDisabled(${c.id})">🚫</button>
                             <button class="move-btn" title="移動" onclick="window.moveWordCardTag(${c.id})">↗️</button>
@@ -218,7 +286,7 @@ window.renderWordCardsView = () => {
     }); 
     const ungrouped = wordCards.filter(c=>!c.groupId && (!search || c.text.includes(search))); 
     if(ungrouped.length||!search){ 
-        html+=`<div class="group-header" onclick="window.toggleGroup('ungrouped')">
+        html+=`<div class="group-header" data-gid="ungrouped">
                     <span>📁 未分組 (${ungrouped.length})</span>
                     <div class="action-buttons"></div>
                 </div>
@@ -227,7 +295,7 @@ window.renderWordCardsView = () => {
             const cardDisabledClass = c.disabled ? 'disabled-card' : '';
             html+=`<div class="card-item ${cardDisabledClass}">
                         <span style="background:#ccc;width:14px;height:14px;border-radius:50%"></span>
-                        <span class="card-text">${c.text}</span>
+                        <span class="card-text">${escapeHtml(c.text)}</span>
                         <div class="action-buttons">
                             <button class="toggle-disabled-btn" onclick="window.toggleCardDisabled(${c.id})">🚫</button>
                             <button class="move-btn" onclick="window.moveWordCardTag(${c.id})">↗️</button>
@@ -238,11 +306,22 @@ window.renderWordCardsView = () => {
         }); 
         html+=`</div>`; 
     } 
-    container.innerHTML = html||'<p>尚無字卡</p>'; 
+    container.innerHTML = html||'<p>尚無字卡</p>';
+    // 绑定分组头点击事件（解决移动端内联onclick不触发问题）
+    document.querySelectorAll('.group-header[data-gid]').forEach(header => {
+        header.removeEventListener('click', header._clickHandler);
+        const gid = header.getAttribute('data-gid');
+        const handler = (e) => {
+            if(e.target.closest('.action-buttons')) return; // 避免按钮区域触发
+            window.toggleGroup(gid === 'ungrouped' ? 'ungrouped' : parseInt(gid));
+        };
+        header.addEventListener('click', handler);
+        header._clickHandler = handler;
+    });
 };
+function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
 
 window.moveWordCardTag = (cardId) => { if(!wordGroups.length){ showToast('請先建立分組'); return; } const card = wordCards.find(c=>c.id===cardId); if(!card) return; const overlay = document.createElement('div'); overlay.className = 'modal-box'; let inner = `<div class="modal-content"><h4>移動字卡至分組</h4>`; wordGroups.forEach(g => { inner += `<button class="big-btn move-group-item" data-gid="${g.id}" style="display:flex; align-items:center; gap:10px; background: ${themeColor}; color:white;"><span style="background:${g.color};width:18px;height:18px;border-radius:50%"></span> ${g.name}</button>`; }); inner += `<button class="big-btn" style="background:#aaa" data-gid="">✖ 取消</button></div>`; overlay.innerHTML = inner; document.body.appendChild(overlay); overlay.querySelectorAll('.big-btn').forEach(btn => { btn.onclick = async () => { const gid = btn.dataset.gid !== undefined && btn.dataset.gid !== '' ? parseInt(btn.dataset.gid) : null; document.body.removeChild(overlay); if(gid !== null || btn.dataset.gid === ''){ card.groupId = gid; await dbPut('wordcards', card); window.openWordCardPanel(); } }; }); };
-window.toggleGroup = (gid) => { if(expandedGroups.has(gid)) expandedGroups.delete(gid); else expandedGroups.add(gid); window.renderWordCardsView(); };
 window.toggleBatch = () => { const el = document.getElementById('batch-area'); if(el) el.style.display = el.style.display==='none'?'block':'none'; };
 window.addWordGroup = function() { const name = prompt('分組名稱'); if(!name) return; const g = { name, color: '#FF6B6B', disabled: false }; dbPut('wordgroups',g).then(id=>{ g.id=id; wordGroups.push(g); window.openWordCardPanel(); }); };
 window.deleteGroup = async (gid) => { if(!confirm('刪除分組？字卡移至未分組')) return; wordCards.filter(c=>c.groupId===gid).forEach(async c=>{ c.groupId=null; await dbPut('wordcards',c); }); await dbDelete('wordgroups',gid); wordGroups = wordGroups.filter(g=>g.id!==gid); window.openWordCardPanel(); };
@@ -252,10 +331,19 @@ window.editGroupName = async (gid) => { const g=wordGroups.find(g=>g.id===gid); 
 window.exportWordCards = () => downloadFile('wordcards.json', JSON.stringify(wordCards.map(c=>({text:c.text, groupId:c.groupId, color:c.color, disabled:c.disabled}))));
 window.batchAddWordCardsWithDedup = async () => { const ta = document.getElementById('batch-textarea'); if(!ta || !ta.value.trim()) { showToast('請輸入字卡內容'); return; } const lines = ta.value.trim().split('\n').filter(l=>l.trim()); const unique = [...new Set(lines.map(l=>l.trim()))]; const gid = document.getElementById('batch-group-select')?.value ? parseInt(document.getElementById('batch-group-select').value) : null; let newCount=0; for(const txt of unique){ if(!wordCards.find(c=>c.text===txt)){ const card = { text:txt, groupId:gid, color:null, frequency:0, disabled:false }; const id = await dbPut('wordcards',card); card.id=id; wordCards.push(card); newCount++; } } showToast(`新增 ${newCount} 個字卡`); window.openWordCardPanel(); };
 window.batchImportWordCards = () => { const input = document.createElement('input'); input.type='file'; input.accept='.json'; input.onchange = async e => { const file=e.target.files[0]; if(!file) return; const text=await file.text(); try{ const data=JSON.parse(text); if(!Array.isArray(data)) throw new Error(); let added=0; for(const item of data){ if(!wordCards.find(c=>c.text===item.text)){ const card = { text:item.text, groupId:item.groupId||null, color:item.color||null, frequency:0, disabled:item.disabled||false }; const id=await dbPut('wordcards',card); card.id=id; wordCards.push(card); added++; } } showToast(`導入完成，新增 ${added} 個字卡`); window.openWordCardPanel(); } catch(err){ showToast('JSON格式錯誤'); } }; input.click(); };
-window.openEmojiPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>😀 Emoji庫</h3><input id="emoji-input" placeholder="輸入emoji"><button onclick="window.addEmoji()">添加</button><div class="emoji-grid">${emojis.map(e=>`<span onclick="window.deleteEmojiConfirm(${e.id})">${e.char}</span>`).join('')}</div><button onclick="window.batchAddEmojis()">✨ 批量常用</button>`); };
-window.addEmoji = async () => { const inp=document.getElementById('emoji-input'); if(!inp||!inp.value.trim()) return; for(const ch of inp.value.trim()){ if(!emojis.some(e=>e.char===ch)){ const e={char:ch}; const id=await dbPut('emojis',e); e.id=id; emojis.push(e); } } window.openEmojiPanel(); };
+
+window.openEmojiPanel = () => { 
+    openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>😀 Emoji庫</h3>
+    <input id="emoji-input" placeholder="輸入單個emoji"><button onclick="window.addEmoji()">添加</button>
+    <div style="margin-top:10px;"><button onclick="window.toggleBatchEmoji()">📝 批量添加Emoji (每行一個)</button></div>
+    <div id="batch-emoji-area" class="batch-emoji-area"><textarea id="batch-emoji-text" rows="3" placeholder="😀\n😂\n🥰"></textarea><button onclick="window.batchAddEmojisFromText()">✅ 批量加入</button></div>
+    <div class="emoji-grid">${emojis.map(e=>`<span onclick="window.deleteEmojiConfirm(${e.id})">${e.char}</span>`).join('')}</div>`);
+};
+window.toggleBatchEmoji = () => { const el = document.getElementById('batch-emoji-area'); if(el) el.style.display = el.style.display==='none'?'block':'none'; };
+window.batchAddEmojisFromText = async () => { const ta = document.getElementById('batch-emoji-text'); if(!ta || !ta.value.trim()) { showToast('請輸入Emoji，每行一個'); return; } const lines = ta.value.trim().split('\n').filter(l=>l.trim()); let added=0; for(const line of lines){ const em = line.trim(); if(em && !emojis.some(e=>e.char===em)){ const newEm = { char: em }; const id = await dbPut('emojis', newEm); newEm.id = id; emojis.push(newEm); added++; } } showToast(`成功新增 ${added} 個Emoji`); window.openEmojiPanel(); };
+window.addEmoji = async () => { const inp=document.getElementById('emoji-input'); if(!inp||!inp.value.trim()) return; const ch = inp.value.trim(); if(!emojis.some(e=>e.char===ch)){ const e={char:ch}; const id=await dbPut('emojis',e); e.id=id; emojis.push(e); } window.openEmojiPanel(); };
 window.deleteEmojiConfirm = async (id) => { if(confirm('刪除？')){ await dbDelete('emojis',id); emojis=emojis.filter(e=>e.id!==id); window.openEmojiPanel(); } };
-window.batchAddEmojis = async () => { const common=['😀','😂','🥰','😍','🤣','😊','😎','🥺','😭','👍','❤️','🔥']; for(const ch of common){ if(!emojis.some(e=>e.char===ch)){ const e={char:ch}; const id=await dbPut('emojis',e); e.id=id; emojis.push(e); } } window.openEmojiPanel(); };
+
 window.openStickerHubPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>🖼️ 表情圖庫</h3><button class="big-btn" onclick="window.openStickerMgmtPanel('other')">對方的表情圖</button><button class="big-btn" onclick="window.openStickerMgmtPanel('self')">我的表情圖</button>`); };
 window.openStickerMgmtPanel = (owner) => { const filterStickers = stickers.filter(s=>s.owner===owner); openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openStickerHubPanel()">←表情圖庫</button><h3>${owner==='self'?'我的':'對方的'}表情圖</h3><input type="file" accept="image/*" id="mgmt-sticker-input" multiple><button onclick="window.importMgmtStickers('${owner}')">導入圖片</button><div class="sticker-grid">${filterStickers.map(s=>`<img src="${s.data}" onclick="window.deleteStickerConfirm(${s.id})">`).join('')}</div>`); };
 window.importMgmtStickers = async (owner) => { const input=document.getElementById('mgmt-sticker-input'); if(!input||!input.files.length) return; for(const f of input.files){ const data=await readFileAsDataURL(f); const s={name:f.name,data,owner,timestamp:Date.now()}; const id=await dbPut('stickers',s); s.id=id; stickers.push(s); } window.openStickerMgmtPanel(owner); };
@@ -277,6 +365,24 @@ window.exportAll = () => downloadFile('backup.json', JSON.stringify({wordGroups,
 window.editOtherName = async () => { const name = prompt('修改對方名稱', otherName); if(name){ otherName=name; document.getElementById('other-name').textContent=name; await saveSetting('otherName',name); } };
 window.clearAll = () => { if(confirm('清除所有資料？無法復原')){ indexedDB.deleteDatabase(DB_NAME); location.reload(); } };
 
+// 头像设置（手机相册）
+otherAvatarImg.onclick = () => { 
+    const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; 
+    inp.onchange = async e => { 
+        const file = e.target.files[0]; 
+        if(file){ 
+            try {
+                const dataUrl = await readFileAsDataURL(file); 
+                otherAvatar = dataUrl; 
+                otherAvatarImg.src = dataUrl; 
+                await saveSetting('otherAvatar', otherAvatar); 
+                showToast('頭像已更新');
+            } catch(err) { showToast('頭像設置失敗'); }
+        } 
+    }; 
+    inp.click(); 
+};
+
 async function init() { 
     await openDB(); 
     await loadAllData(); 
@@ -291,8 +397,7 @@ async function init() {
     document.getElementById('send-btn').onclick = () => sendMessage();
     document.getElementById('cancel-quote-btn').onclick = () => cancelQuote();
     msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    otherAvatarImg.onclick = () => { const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange = async e => { const file=e.target.files[0]; if(file){ otherAvatar=await readFileAsDataURL(file); otherAvatarImg.src=otherAvatar; await saveSetting('otherAvatar',otherAvatar); } }; inp.click(); };
-    showToast('✅ 專屬空間已啟動 | 點擊🚫可停用字卡/分組');
+    showToast('✅ 專屬空間已啟動 | 點擊分組標題可展開/折疊');
 }
 init();
 })();
