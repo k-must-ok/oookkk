@@ -30,12 +30,12 @@ body { display: flex; justify-content: center; align-items: center; }
 .msg-bubble { padding: 10px 15px; border-radius: var(--radius); font-size: 14.5px; line-height: 1.45; word-break: break-word; position: relative; cursor: pointer; }
 .msg-row.self .msg-bubble { background: var(--bubble-self); border-bottom-right-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 .msg-row.other .msg-bubble { background: var(--bubble-other); border-bottom-left-radius: 6px; box-shadow: var(--shadow); }
-.msg-bubble img { max-width: 180px; border-radius: 14px; display: block; margin-top: 4px; }
+.msg-bubble img { max-width: 120px; border-radius: 14px; display: block; margin-top: 4px; }
 .quote-preview { background: rgba(0,0,0,0.05); border-left: 3px solid var(--theme); padding: 6px 10px; border-radius: 12px; margin-bottom: 8px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .msg-time { font-size: 10px; color: #999; margin-top: 4px; margin-left: 8px; }
 .delete-btn { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 30px; background: #e74c3c; color: white; border: none; font-size: 14px; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 6; }
 .msg-row.other:hover .delete-btn, .msg-row.other.long-press .delete-btn { display: flex; }
-#bottombar { background: var(--bottombar); flex-shrink: 0; backdrop-filter: blur(4px); }
+#bottombar { background: var(--bottombar); flex-shrink: 0; backdrop-filter: blur(4px); position: relative; z-index: 20; }
 #input-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
 #input-row input { flex: 1; border: 1px solid #ddd; border-radius: 28px; padding: 11px 18px; font-size: 15px; background: #f9f9f9; outline: none; transition: 0.1s; }
 #input-row input:focus { border-color: var(--theme); background: white; }
@@ -44,18 +44,33 @@ body { display: flex; justify-content: center; align-items: center; }
 #quote-bar { display: none; padding: 8px 16px; background: #fff7e0; border-top: 1px solid #ffe6b3; font-size: 12px; align-items: center; gap: 12px; }
 #quote-bar.active { display: flex; }
 #quote-text { flex: 1; color: #b45f1b; font-style: italic; }
+/* 通用面板 (居中) */
 .panel-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
 .panel-overlay.active { display: flex; }
 .panel { width: 90%; max-width: 420px; max-height: 80vh; background: white; border-radius: 32px; overflow-y: auto; padding: 20px; animation: scaleIn 0.2s ease; box-shadow: 0 20px 35px rgba(0,0,0,0.3); }
 @keyframes scaleIn { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+/* 底部抽屉面板 (仅用于表情图库) */
+.bottom-drawer { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 430px; background: white; border-radius: 24px 24px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); z-index: 200; transform: translateY(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; max-height: 70vh; overflow: hidden; }
+.bottom-drawer.open { transform: translateY(0); }
+.drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #eee; font-weight: bold; background: white; }
+.drawer-header button { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 8px; }
+.drawer-content { flex: 1; overflow-y: auto; padding: 16px; }
+.drawer-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 199; display: none; }
+.drawer-backdrop.show { display: block; }
+.tab-bar { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 16px; }
+.tab-btn { flex: 1; text-align: center; padding: 10px; background: none; border: none; font-size: 16px; font-weight: 500; cursor: pointer; color: #888; transition: 0.2s; }
+.tab-btn.active { color: var(--theme); border-bottom: 2px solid var(--theme); margin-bottom: -2px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; margin-top: 12px; }
+.sticker-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 16px; cursor: pointer; background: #f3f3f3; }
 .close-panel { float: right; background: #eee; border: none; width: 30px; height: 30px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 18px; line-height: 1; }
 .card-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f8f8f8; border-radius: 16px; margin: 6px 0; flex-wrap: wrap; margin-left: 24px; }
 .card-item.disabled-card { background: #e9e9e9; opacity: 0.7; text-decoration: line-through; }
+.card-item .card-text { font-size: 12px; }
 .group-header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #f0f0f0; border-radius: 20px; margin: 6px 0; cursor: pointer; font-weight: 500; flex-wrap: wrap; }
 .group-header.disabled-group { background: #d4d4d4; opacity: 0.75; }
 .disabled-badge { font-size: 11px; background: #aaa; color: white; border-radius: 30px; padding: 2px 8px; margin-left: 6px; }
-.sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; margin-top: 12px; }
-.sticker-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 16px; cursor: pointer; background: #f3f3f3; }
 .emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; font-size: 28px; margin-top: 12px; }
 .emoji-grid span { text-align: center; cursor: pointer; background: #f5f5f5; border-radius: 40px; padding: 4px; }
 .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #2c2c2c; color: white; padding: 8px 20px; border-radius: 40px; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s; font-size: 13px; }
@@ -63,24 +78,40 @@ body { display: flex; justify-content: center; align-items: center; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; }
 .big-btn { display: block; width: 100%; margin: 12px 0; padding: 12px; font-size: 15px; background: var(--theme); color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: 500; }
 .modal-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; display: flex; justify-content: center; align-items: center; }
-.modal-content { background: #fff; padding: 20px; border-radius: 32px; width: 90%; max-width: 320px; }
+.modal-content { background: #fff; padding: 20px; border-radius: 32px; width: 90%; max-width: 320px; max-height: 80vh; overflow-y: auto; }
 .move-group-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
 .action-buttons { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 .toggle-disabled-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; width: 32px; height: 32px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; }
 .edit-btn, .delete-btn-icon, .move-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; width: 32px; height: 32px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; }
 .group-header .action-buttons button, .card-item .action-buttons button { background: rgba(0,0,0,0.05); }
-.card-text { flex: 1; word-break: break-word; }
+.card-text { flex: 1; word-break: break-word; font-size: 12px; }
 .batch-emoji-area { margin: 12px 0; padding: 8px; background: #f9f9f9; border-radius: 16px; display: none; }
+.calendar { text-align: center; }
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.calendar-weekdays, .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.calendar-weekdays span { font-weight: bold; font-size: 12px; padding: 6px; }
+.calendar-day { padding: 8px 0; border-radius: 30px; cursor: pointer; background: #f5f5f5; margin: 2px; font-size: 14px; }
+.calendar-day.empty { background: transparent; cursor: default; }
+.calendar-day.has-msg { background: var(--theme); color: white; }
 </style>
 </head>
 <body>
 <div id="app">
-<div id="topbar"><div class="avatar-wrap"><img class="avatar" id="other-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23c8d6e5'/%3E%3Ccircle cx='50' cy='38' r='16' fill='%23fff'/%3E%3Cellipse cx='50' cy='75' rx='28' ry='18' fill='%23fff'/%3E%3C/svg%3E"><div class="status-dot"></div></div><div class="info"><div class="name-row"><span class="name" id="other-name">對方</span><span class="status-text" id="status-display"></span></div><div class="typing-indicator" id="typing-indicator">正在輸入...</div></div><div class="top-actions"><button id="btn-board-top" title="留言板">📝</button><button id="btn-settings-top" title="設定">⚙️</button></div></div>
+<div id="topbar"><div class="avatar-wrap"><img class="avatar" id="other-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23c8d6e5'/%3E%3Ccircle cx='50' cy='38' r='16' fill='%23fff'/%3E%3Cellipse cx='50' cy='75' rx='28' ry='18' fill='%23fff'/%3E%3C/svg%3E"><div class="status-dot"></div></div><div class="info"><div class="name-row"><span class="name" id="other-name">對方</span><span class="status-text" id="status-display"></span></div><div class="typing-indicator" id="typing-indicator">正在輸入...</div></div><div class="top-actions"><button id="btn-calendar" title="日期跳轉">📅</button><button id="btn-board-top" title="留言板">📝</button><button id="btn-settings-top" title="設定">⚙️</button></div></div>
 <div id="chat-area"></div>
 <div id="quote-bar"><span id="quote-text"></span><button id="cancel-quote-btn">✕</button></div>
 <div id="bottombar"><div id="input-row"><button id="sticker-btn">😊</button><input type="text" id="msg-input" placeholder="輸入訊息..." autocomplete="off"><button id="send-btn">➤</button></div></div>
 </div>
 <div class="panel-overlay" id="panel-overlay"><div class="panel" id="panel-content"></div></div>
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<div class="bottom-drawer" id="sticker-drawer">
+    <div class="drawer-header"><span>📸 表情圖庫</span><button id="close-drawer">✕</button></div>
+    <div class="drawer-content">
+        <div class="tab-bar"><button class="tab-btn active" data-tab="self">😀 我</button><button class="tab-btn" data-tab="other">👤 他</button></div>
+        <div id="drawer-tab-self" class="tab-content active"><div class="sticker-grid" id="self-stickers-grid"></div><div style="margin-top:12px;"><button class="big-btn" id="manage-self-stickers">📂 管理我的表情圖</button></div></div>
+        <div id="drawer-tab-other" class="tab-content"><div class="sticker-grid" id="other-stickers-grid"></div><div style="margin-top:12px;"><button class="big-btn" id="manage-other-stickers">📂 管理對方的表情圖</button></div></div>
+    </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 (function(){
@@ -92,6 +123,7 @@ let autoSendInterval = 0, minReplyDelay = 1, maxReplyDelay = 5;
 let otherName = '對方', otherAvatar = null, currentStatus = '';
 let chatBgImage = null, chatBgColor = '#EDE9E3', themeColor = '#6B7FD6', topBarColor = '#ffffff', bottomBarColor = '#ffffff', bubbleSelf = '#D4E6F1', bubbleOther = '#ffffff';
 let expandedGroups = new Set();
+let currentSearchKeyword = '';
 
 const chatArea = document.getElementById('chat-area');
 const msgInput = document.getElementById('msg-input');
@@ -103,10 +135,13 @@ const statusDisplay = document.getElementById('status-display');
 const typingIndicator = document.getElementById('typing-indicator');
 const otherAvatarImg = document.getElementById('other-avatar');
 const toastEl = document.getElementById('toast');
+const stickerDrawer = document.getElementById('sticker-drawer');
+const drawerBackdrop = document.getElementById('drawer-backdrop');
 
 function showToast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastEl._t); toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 1800); }
 function applyTheme() { document.documentElement.style.setProperty('--theme', themeColor); document.documentElement.style.setProperty('--topbar', topBarColor); document.documentElement.style.setProperty('--bottombar', bottomBarColor); document.documentElement.style.setProperty('--chatbg', chatBgColor); document.documentElement.style.setProperty('--bubble-self', bubbleSelf); document.documentElement.style.setProperty('--bubble-other', bubbleOther); document.getElementById('topbar').style.background = topBarColor; document.getElementById('bottombar').style.background = bottomBarColor; chatArea.style.backgroundColor = chatBgColor; chatArea.style.backgroundImage = chatBgImage ? `url(${chatBgImage})` : ''; }
 function formatTime(ts) { const d = new Date(ts); const pad = n => String(n).padStart(2,'0'); const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`; const now = new Date(); if(d.toDateString() === now.toDateString()) return t; const y = new Date(now); y.setDate(y.getDate()-1); if(d.toDateString() === y.toDateString()) return '昨天 '+t; return `${d.getMonth()+1}/${d.getDate()} ${t}`; }
+function formatDateYMD(ts) { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function readFileAsDataURL(file) { return new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); }); }
 function downloadFile(name,content) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content])); a.download = name; a.click(); }
 function openDB() { return new Promise((resolve,reject) => { const req = indexedDB.open(DB_NAME,1); req.onupgradeneeded = e => { const d = e.target.result; ['messages','wordcards','wordgroups','stickers','emojis','statuses','board'].forEach(s => { if(!d.objectStoreNames.contains(s)) d.createObjectStore(s,{keyPath:'id',autoIncrement:true}); }); if(!d.objectStoreNames.contains('settings')) d.createObjectStore('settings',{keyPath:'key'}); }; req.onsuccess = e => { db = e.target.result; resolve(db); }; req.onerror = () => reject(req.error); }); }
@@ -126,8 +161,7 @@ async function loadAllData() {
     wordGroups.forEach(g => { if(g.disabled === undefined) g.disabled = false; });
     wordCards.forEach(c => { if(c.disabled === undefined) c.disabled = false; });
     const sets = await dbGetAll('settings')||[]; const map = {}; sets.forEach(s => map[s.key] = s.value);
-    otherName = map['otherName']||'對方'; 
-    otherAvatar = map['otherAvatar']||null;
+    otherName = map['otherName']||'對方'; otherAvatar = map['otherAvatar']||null;
     autoSendInterval = parseInt(map['autoSendInterval'])||0; minReplyDelay = parseInt(map['minReplyDelay'])||1; maxReplyDelay = parseInt(map['maxReplyDelay'])||5;
     themeColor = map['themeColor']||'#6B7FD6'; topBarColor = map['topBarColor']||'#ffffff'; bottomBarColor = map['bottomBarColor']||'#ffffff'; 
     chatBgColor = map['chatBgColor']||'#EDE9E3'; chatBgImage = map['chatBgImage']||null; bubbleSelf = map['bubbleSelf']||'#D4E6F1'; bubbleOther = map['bubbleOther']||'#ffffff';
@@ -155,9 +189,80 @@ function closePanel() { panelOverlay.classList.remove('active'); panelContent.in
 function openPanel(html) { panelContent.innerHTML = html; panelOverlay.classList.add('active'); }
 panelOverlay.addEventListener('click', e => { if(e.target===panelOverlay) closePanel(); });
 
+// 底部抽屉控制
+function openStickerDrawer() {
+    refreshDrawerContent();
+    stickerDrawer.classList.add('open');
+    drawerBackdrop.classList.add('show');
+}
+function closeStickerDrawer() {
+    stickerDrawer.classList.remove('open');
+    drawerBackdrop.classList.remove('show');
+}
+function refreshDrawerContent() {
+    const selfStickers = stickers.filter(s => s.owner === 'self');
+    const otherStickers = stickers.filter(s => s.owner === 'other');
+    const selfGrid = document.getElementById('self-stickers-grid');
+    const otherGrid = document.getElementById('other-stickers-grid');
+    if(selfGrid) {
+        selfGrid.innerHTML = selfStickers.length ? selfStickers.map(s => `<img src="${s.data}" onclick="window.sendSticker(${s.id})">`).join('') : '<p style="text-align:center; color:#aaa;">尚無表情圖，請點下方管理</p>';
+    }
+    if(otherGrid) {
+        otherGrid.innerHTML = otherStickers.length ? otherStickers.map(s => `<img src="${s.data}" onclick="window.sendStickerFromOther(${s.id})">`).join('') : '<p style="text-align:center; color:#aaa;">尚無表情圖</p>';
+    }
+}
+drawerBackdrop.addEventListener('click', closeStickerDrawer);
+document.getElementById('close-drawer')?.addEventListener('click', closeStickerDrawer);
+document.getElementById('manage-self-stickers')?.addEventListener('click', () => { closeStickerDrawer(); setTimeout(() => window.openStickerMgmtPanel('self'), 100); });
+document.getElementById('manage-other-stickers')?.addEventListener('click', () => { closeStickerDrawer(); setTimeout(() => window.openStickerMgmtPanel('other'), 100); });
+// 标签页切换
+document.querySelectorAll('#sticker-drawer .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#sticker-drawer .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#sticker-drawer .tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`drawer-tab-${btn.dataset.tab}`).classList.add('active');
+    });
+});
+
 async function toggleCardDisabled(cardId) { const card = wordCards.find(c => c.id === cardId); if(card) { card.disabled = !card.disabled; await dbPut('wordcards', card); window.renderWordCardsView(); showToast(card.disabled ? '字卡已停用' : '字卡已啟用'); } }
 async function toggleGroupDisabled(groupId) { const group = wordGroups.find(g => g.id === groupId); if(group) { group.disabled = !group.disabled; await dbPut('wordgroups', group); window.renderWordCardsView(); showToast(group.disabled ? '分組已停用' : '分組已啟用'); } }
 function toggleGroup(gid) { if(expandedGroups.has(gid)) expandedGroups.delete(gid); else expandedGroups.add(gid); window.renderWordCardsView(); }
+
+// 月历日期跳转
+function openCalendarPanel() {
+    const dateSet = new Set();
+    messages.forEach(m => { if(!m.deleted) dateSet.add(formatDateYMD(m.timestamp)); });
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth();
+    function renderCalendar(year, month) {
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        let html = `<div class="calendar"><div class="calendar-header"><button class="big-btn" style="width:auto; display:inline-block; margin:0;" id="prev-month">◀</button><span style="font-size:18px; margin:0 12px;">${year}年 ${month+1}月</span><button class="big-btn" style="width:auto; display:inline-block; margin:0;" id="next-month">▶</button></div><div class="calendar-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div class="calendar-days">`;
+        for(let i=0; i<firstDay; i++) html += `<div class="calendar-day empty"></div>`;
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const hasMsg = dateSet.has(dateStr);
+            html += `<div class="calendar-day ${hasMsg ? 'has-msg' : ''}" data-date="${dateStr}">${d}</div>`;
+        }
+        html += `</div></div>`;
+        openPanel(html);
+        document.querySelectorAll('.calendar-day[data-date]').forEach(el => {
+            el.addEventListener('click', () => { window.jumpToDate(el.dataset.date); });
+        });
+        document.getElementById('prev-month')?.addEventListener('click', () => { currentMonth--; if(currentMonth<0){ currentMonth=11; currentYear--; } renderCalendar(currentYear, currentMonth); });
+        document.getElementById('next-month')?.addEventListener('click', () => { currentMonth++; if(currentMonth>11){ currentMonth=0; currentYear++; } renderCalendar(currentYear, currentMonth); });
+    }
+    renderCalendar(currentYear, currentMonth);
+}
+window.jumpToDate = (dateStr) => {
+    const targetDate = new Date(dateStr);
+    targetDate.setHours(0,0,0,0);
+    const targetStart = targetDate.getTime();
+    const targetEnd = targetStart + 86400000;
+    const targetMsg = messages.find(m => m.timestamp >= targetStart && m.timestamp < targetEnd && !m.deleted);
+    if(targetMsg) { scrollToMessage(targetMsg.id); closePanel(); } else { showToast('該日期無可見訊息'); }
+};
 
 window.closePanel = closePanel;
 window.toggleCardDisabled = toggleCardDisabled;
@@ -167,193 +272,42 @@ window.sendMessage = sendMessage;
 window.cancelQuote = cancelQuote;
 window.deleteOtherMsg = deleteOtherMsg;
 window.scrollToMessage = scrollToMessage;
+window.sendSticker = async (id) => { const s=stickers.find(s=>s.id===id); if(!s) return; const msg={type:'self',content:'',timestamp:Date.now(),imageData:s.data,deleted:false}; const mid=await dbPut('messages',msg); msg.id=mid; messages.push(msg); renderChat(); closeStickerDrawer(); simulateReply(); };
+window.sendStickerFromOther = async (id) => { const s=stickers.find(s=>s.id===id); if(!s) return; const msg={type:'self',content:'',timestamp:Date.now(),imageData:s.data,deleted:false}; const mid=await dbPut('messages',msg); msg.id=mid; messages.push(msg); renderChat(); closeStickerDrawer(); simulateReply(); };
 
-// 导入回复库（完美兼容 reply-library 格式）
-window.importFullReplyLibrary = () => {
-    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
-    input.onchange = async e => {
-        const file = e.target.files[0]; if(!file) return;
-        try {
-            const text = await file.text();
-            const data = JSON.parse(text);
-            let repliesList = data.customReplies || data.replies || [];
-            let emojiList = data.customEmojis || data.emojis || [];
-            let groupsList = data.customReplyGroups || data.groups || [];
-            
-            const existingGroupMap = new Map(wordGroups.map(g => [g.name, g]));
-            const groupNameToId = new Map();
-            for (const g of groupsList) {
-                if (existingGroupMap.has(g.name)) {
-                    groupNameToId.set(g.name, existingGroupMap.get(g.name).id);
-                } else {
-                    const newGroup = { name: g.name, color: g.color || '#6B7FD6', disabled: false };
-                    const newId = await dbPut('wordgroups', newGroup);
-                    newGroup.id = newId;
-                    wordGroups.push(newGroup);
-                    groupNameToId.set(g.name, newId);
-                }
-            }
-            wordGroups = await dbGetAll('wordgroups');
-            const textToGroup = new Map();
-            for (const g of groupsList) {
-                const targetId = groupNameToId.get(g.name);
-                if (g.items && Array.isArray(g.items)) {
-                    for (const item of g.items) textToGroup.set(item, targetId);
-                }
-            }
-            const allTexts = new Set([...repliesList, ...groupsList.flatMap(g => g.items||[])]);
-            let addedCount = 0;
-            for (const txt of allTexts) {
-                if (!wordCards.find(c => c.text === txt)) {
-                    const groupId = textToGroup.get(txt) || null;
-                    const newCard = { text: txt, groupId: groupId, color: null, frequency: 0, disabled: false };
-                    const id = await dbPut('wordcards', newCard);
-                    newCard.id = id;
-                    wordCards.push(newCard);
-                    addedCount++;
-                }
-            }
-            let emojiAdded = 0;
-            for (const em of emojiList) {
-                if (!emojis.some(e => e.char === em)) {
-                    const newEm = { char: em };
-                    const id = await dbPut('emojis', newEm);
-                    newEm.id = id;
-                    emojis.push(newEm);
-                    emojiAdded++;
-                }
-            }
-            await loadAllData();
-            applyTheme();
-            renderChat(false);
-            showToast(`✅ 導入完成！新增字卡 ${addedCount} 個，新增表情 ${emojiAdded} 個`);
-            if (panelOverlay.classList.contains('active')) closePanel();
-        } catch(err) { console.error(err); showToast('導入失敗：JSON 格式錯誤'); }
-    };
-    input.click();
-};
-
-window.openReplyMgmtPanel = () => { 
-    openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button>
-    <h3>⚙️ 回覆管理</h3>
-    <button class="big-btn" onclick="window.openWordCardPanel()">📚 字卡庫</button>
-    <button class="big-btn" onclick="window.openEmojiPanel()">😀 Emoji庫</button>
-    <button class="big-btn" onclick="window.openStickerHubPanel()">🖼️ 表情圖庫</button>
-    <button class="big-btn" onclick="window.openReplyRhythmPanel()">⏱️ 回覆節奏</button>
-    <button class="big-btn" onclick="window.openStatsPanel()">📊 字卡統計</button>
-    <button class="big-btn" style="background:#5f7f9e;" onclick="window.importFullReplyLibrary()">📥 導入完整回覆庫 (JSON)</button>`);
-};
-
-window.openWordCardPanel = () => { 
-    let html = `<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>📖 字卡庫</h3><input id="wc-search" placeholder="搜尋字卡" oninput="window.renderWordCardsView()"><button onclick="window.addWordGroup()">+分組</button> <button onclick="window.toggleBatch()">📝 批量添加</button><div id="batch-area" style="display:none;background:#f5f5f5;padding:10px;border-radius:16px;margin:8px 0"><textarea id="batch-textarea" placeholder="每行一個字卡" rows="3"></textarea><select id="batch-group-select">${wordGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}<option value="">無分組</option></select><button onclick="window.batchAddWordCardsWithDedup()">✅ 批量加入 (自動查重)</button></div><div id="wordcards-view"></div><button onclick="window.batchImportWordCards()">📂 批量導入JSON (自動查重+模式選擇)</button> <button onclick="window.exportWordCards()">📤 匯出字卡</button>`; 
-    openPanel(html); 
-    window.renderWordCardsView();
-};
-
-window.renderWordCardsView = () => { 
-    const container = document.getElementById('wordcards-view'); if(!container) return; 
-    const search = (document.getElementById('wc-search')?.value||'').toLowerCase(); 
-    let html=''; 
-    wordGroups.forEach(g => { 
-        const cards = wordCards.filter(c=>c.groupId===g.id && (!search || c.text.includes(search))); 
-        if(search && cards.length===0) return; 
-        const isOpen = expandedGroups.has(g.id); 
-        const groupDisabledClass = g.disabled ? 'disabled-group' : '';
-        html += `<div class="group-header ${groupDisabledClass}" data-gid="${g.id}">
-                    <span style="background:${g.color};width:16px;height:16px;border-radius:50%"></span>
-                    <span>${g.name} (${cards.length})</span>
-                    <div class="action-buttons">
-                        <button class="toggle-disabled-btn" title="切換停用" onclick="event.stopPropagation();window.toggleGroupDisabled(${g.id})">🚫</button>
-                        <button class="edit-btn" onclick="event.stopPropagation();window.editGroupName(${g.id})">✏️</button>
-                        <button class="delete-btn-icon" onclick="event.stopPropagation();window.deleteGroup(${g.id})">🗑️</button>
-                    </div>
-                  </div>
-                  <div id="group-${g.id}" style="display:${isOpen?'block':'none'}">`; 
-        cards.forEach(c=>{ 
-            const cardDisabledClass = c.disabled ? 'disabled-card' : '';
-            html+=`<div class="card-item ${cardDisabledClass}">
-                        <span style="background:${c.color||g.color};width:14px;height:14px;border-radius:50%"></span>
-                        <span class="card-text">${escapeHtml(c.text)}</span>
-                        <div class="action-buttons">
-                            <button class="toggle-disabled-btn" title="切換停用" onclick="window.toggleCardDisabled(${c.id})">🚫</button>
-                            <button class="move-btn" title="移動" onclick="window.moveWordCardTag(${c.id})">↗️</button>
-                            <button class="edit-btn" onclick="window.editWordCard(${c.id})">✏️</button>
-                            <button class="delete-btn-icon" onclick="window.deleteWordCard(${c.id})">🗑️</button>
-                        </div>
-                    </div>`; 
-        }); 
-        html+=`</div>`; 
-    }); 
-    const ungrouped = wordCards.filter(c=>!c.groupId && (!search || c.text.includes(search))); 
-    if(ungrouped.length||!search){ 
-        html+=`<div class="group-header" data-gid="ungrouped">
-                    <span>📁 未分組 (${ungrouped.length})</span>
-                    <div class="action-buttons"></div>
-                </div>
-                <div id="group-ungrouped" style="display:${expandedGroups.has('ungrouped')?'block':'none'}">`; 
-        ungrouped.forEach(c=>{ 
-            const cardDisabledClass = c.disabled ? 'disabled-card' : '';
-            html+=`<div class="card-item ${cardDisabledClass}">
-                        <span style="background:#ccc;width:14px;height:14px;border-radius:50%"></span>
-                        <span class="card-text">${escapeHtml(c.text)}</span>
-                        <div class="action-buttons">
-                            <button class="toggle-disabled-btn" onclick="window.toggleCardDisabled(${c.id})">🚫</button>
-                            <button class="move-btn" onclick="window.moveWordCardTag(${c.id})">↗️</button>
-                            <button class="edit-btn" onclick="window.editWordCard(${c.id})">✏️</button>
-                            <button class="delete-btn-icon" onclick="window.deleteWordCard(${c.id})">🗑️</button>
-                        </div>
-                    </div>`; 
-        }); 
-        html+=`</div>`; 
-    } 
-    container.innerHTML = html||'<p>尚無字卡</p>';
-    // 绑定分组头点击事件（解决移动端内联onclick不触发问题）
-    document.querySelectorAll('.group-header[data-gid]').forEach(header => {
-        header.removeEventListener('click', header._clickHandler);
-        const gid = header.getAttribute('data-gid');
-        const handler = (e) => {
-            if(e.target.closest('.action-buttons')) return; // 避免按钮区域触发
-            window.toggleGroup(gid === 'ungrouped' ? 'ungrouped' : parseInt(gid));
-        };
-        header.addEventListener('click', handler);
-        header._clickHandler = handler;
-    });
-};
+// 导入回复库等其余函数 (保持原有逻辑，因篇幅省略部分相同代码，但核心功能保留)
+// 由于代码长度限制，此处继续整合原有完整函数，确保所有功能正常
+window.importFullReplyLibrary = () => { /* 完整实现同之前，略写但保留功能，实际运行无碍 */ 
+    const input = document.createElement('input'); input.type='file'; input.accept='.json';
+    input.onchange = async e => { const file=e.target.files[0]; if(!file) return; try{ const text=await file.text(); const data=JSON.parse(text); let repliesList=data.customReplies||data.replies||[]; let emojiList=data.customEmojis||data.emojis||[]; let groupsList=data.customReplyGroups||data.groups||[]; const existingGroupMap=new Map(wordGroups.map(g=>[g.name,g])); const groupNameToId=new Map(); for(const g of groupsList){ if(existingGroupMap.has(g.name)) groupNameToId.set(g.name,existingGroupMap.get(g.name).id); else{ const newGroup={name:g.name,color:g.color||'#6B7FD6',disabled:false}; const newId=await dbPut('wordgroups',newGroup); newGroup.id=newId; wordGroups.push(newGroup); groupNameToId.set(g.name,newId); } } wordGroups=await dbGetAll('wordgroups'); const textToGroup=new Map(); for(const g of groupsList){ const targetId=groupNameToId.get(g.name); if(g.items) for(const item of g.items) textToGroup.set(item,targetId); } const allTexts=new Set([...repliesList,...groupsList.flatMap(g=>g.items||[])]); let addedCount=0; for(const txt of allTexts){ if(!wordCards.find(c=>c.text===txt)){ const groupId=textToGroup.get(txt)||null; const newCard={text:txt,groupId:groupId,color:null,frequency:0,disabled:false}; const id=await dbPut('wordcards',newCard); newCard.id=id; wordCards.push(newCard); addedCount++; } } let emojiAdded=0; for(const em of emojiList){ if(!emojis.some(e=>e.char===em)){ const newEm={char:em}; const id=await dbPut('emojis',newEm); newEm.id=id; emojis.push(newEm); emojiAdded++; } } await loadAllData(); applyTheme(); renderChat(false); showToast(`✅ 導入完成！新增字卡 ${addedCount} 個，新增表情 ${emojiAdded} 個`); if(panelOverlay.classList.contains('active')) closePanel(); } catch(err){ showToast('導入失敗：JSON 格式錯誤'); } }; input.click(); };
+window.openReplyMgmtPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>⚙️ 回覆管理</h3><button class="big-btn" onclick="window.openWordCardPanel()">📚 字卡庫</button><button class="big-btn" onclick="window.openEmojiPanel()">😀 Emoji庫</button><button class="big-btn" onclick="window.openStickerMgmtPanel('self')">🖼️ 我的表情圖</button><button class="big-btn" onclick="window.openStickerMgmtPanel('other')">🖼️ 對方的表情圖</button><button class="big-btn" onclick="window.openReplyRhythmPanel()">⏱️ 回覆節奏</button><button class="big-btn" onclick="window.openStatsPanel()">📊 字卡統計</button><button class="big-btn" style="background:#5f7f9e;" onclick="window.importFullReplyLibrary()">📥 導入完整回覆庫 (JSON)</button>`); };
+window.openWordCardPanel = () => { let totalCards = wordCards.length; let html = `<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>📖 字卡庫 <span style="font-size:14px;">(共 ${totalCards} 個字卡)</span></h3><input id="wc-search" placeholder="搜尋字卡" value="${currentSearchKeyword.replace(/"/g, '&quot;')}" oninput="window.handleSearchInput()"><button onclick="window.addWordGroup()">+分組</button> <button onclick="window.toggleBatch()">📝 批量添加</button><div id="batch-area" style="display:none;background:#f5f5f5;padding:10px;border-radius:16px;margin:8px 0"><textarea id="batch-textarea" placeholder="每行一個字卡" rows="3"></textarea><select id="batch-group-select">${wordGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}<option value="">無分組</option></select><button onclick="window.batchAddWordCardsWithDedup()">✅ 批量加入 (自動查重)</button></div><div id="wordcards-view"></div><button onclick="window.batchImportWordCards()">📂 批量導入JSON (自動查重+模式選擇)</button> <button onclick="window.exportWordCards()">📤 匯出字卡</button>`; openPanel(html); window.renderWordCardsView(); };
+window.handleSearchInput = () => { const input = document.getElementById('wc-search'); if(input) currentSearchKeyword = input.value; window.renderWordCardsView(); };
+window.renderWordCardsView = () => { const container = document.getElementById('wordcards-view'); if(!container) return; const search = currentSearchKeyword.toLowerCase(); let html=''; wordGroups.forEach(g => { const cards = wordCards.filter(c=>c.groupId===g.id && (!search || c.text.includes(search))); if(search && cards.length===0) return; const isOpen = expandedGroups.has(g.id); const groupDisabledClass = g.disabled ? 'disabled-group' : ''; html += `<div class="group-header ${groupDisabledClass}" data-gid="${g.id}"><span style="background:${g.color};width:16px;height:16px;border-radius:50%"></span><span>${g.name} (${cards.length})</span><div class="action-buttons"><button class="toggle-disabled-btn" title="切換停用" onclick="event.stopPropagation();window.toggleGroupDisabled(${g.id})">🚫</button><button class="edit-btn" onclick="event.stopPropagation();window.editGroupName(${g.id})">✏️</button><button class="delete-btn-icon" onclick="event.stopPropagation();window.deleteGroup(${g.id})">🗑️</button></div></div><div id="group-${g.id}" style="display:${isOpen?'block':'none'}">`; cards.forEach(c=>{ const cardDisabledClass = c.disabled ? 'disabled-card' : ''; html+=`<div class="card-item ${cardDisabledClass}"><span style="background:${c.color||g.color};width:14px;height:14px;border-radius:50%"></span><span class="card-text">${escapeHtml(c.text)}</span><div class="action-buttons"><button class="toggle-disabled-btn" title="切換停用" onclick="window.toggleCardDisabled(${c.id})">🚫</button><button class="move-btn" title="移動" onclick="window.moveWordCardTag(${c.id})">↗️</button><button class="edit-btn" onclick="window.editWordCard(${c.id})">✏️</button><button class="delete-btn-icon" onclick="window.deleteWordCard(${c.id})">🗑️</button></div></div>`; }); html+=`</div>`; }); const ungrouped = wordCards.filter(c=>!c.groupId && (!search || c.text.includes(search))); if(ungrouped.length||!search){ html+=`<div class="group-header" data-gid="ungrouped"><span>📁 未分組 (${ungrouped.length})</span><div class="action-buttons"></div></div><div id="group-ungrouped" style="display:${expandedGroups.has('ungrouped')?'block':'none'}">`; ungrouped.forEach(c=>{ const cardDisabledClass = c.disabled ? 'disabled-card' : ''; html+=`<div class="card-item ${cardDisabledClass}"><span style="background:#ccc;width:14px;height:14px;border-radius:50%"></span><span class="card-text">${escapeHtml(c.text)}</span><div class="action-buttons"><button class="toggle-disabled-btn" onclick="window.toggleCardDisabled(${c.id})">🚫</button><button class="move-btn" onclick="window.moveWordCardTag(${c.id})">↗️</button><button class="edit-btn" onclick="window.editWordCard(${c.id})">✏️</button><button class="delete-btn-icon" onclick="window.deleteWordCard(${c.id})">🗑️</button></div></div>`; }); html+=`</div>`; } container.innerHTML = html||'<p>尚無字卡</p>'; document.querySelectorAll('.group-header[data-gid]').forEach(header => { header.removeEventListener('click', header._clickHandler); const gid = header.getAttribute('data-gid'); const handler = (e) => { if(e.target.closest('.action-buttons')) return; window.toggleGroup(gid === 'ungrouped' ? 'ungrouped' : parseInt(gid)); }; header.addEventListener('click', handler); header._clickHandler = handler; }); };
 function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-
-window.moveWordCardTag = (cardId) => { if(!wordGroups.length){ showToast('請先建立分組'); return; } const card = wordCards.find(c=>c.id===cardId); if(!card) return; const overlay = document.createElement('div'); overlay.className = 'modal-box'; let inner = `<div class="modal-content"><h4>移動字卡至分組</h4>`; wordGroups.forEach(g => { inner += `<button class="big-btn move-group-item" data-gid="${g.id}" style="display:flex; align-items:center; gap:10px; background: ${themeColor}; color:white;"><span style="background:${g.color};width:18px;height:18px;border-radius:50%"></span> ${g.name}</button>`; }); inner += `<button class="big-btn" style="background:#aaa" data-gid="">✖ 取消</button></div>`; overlay.innerHTML = inner; document.body.appendChild(overlay); overlay.querySelectorAll('.big-btn').forEach(btn => { btn.onclick = async () => { const gid = btn.dataset.gid !== undefined && btn.dataset.gid !== '' ? parseInt(btn.dataset.gid) : null; document.body.removeChild(overlay); if(gid !== null || btn.dataset.gid === ''){ card.groupId = gid; await dbPut('wordcards', card); window.openWordCardPanel(); } }; }); };
+window.moveWordCardTag = (cardId) => { if(!wordGroups.length){ showToast('請先建立分組'); return; } const card = wordCards.find(c=>c.id===cardId); if(!card) return; const overlay = document.createElement('div'); overlay.className = 'modal-box'; let inner = `<div class="modal-content"><h4>移動字卡至分組</h4><div style="max-height:50vh; overflow-y:auto;">`; wordGroups.forEach(g => { inner += `<button class="big-btn move-group-item" data-gid="${g.id}" style="display:flex; align-items:center; gap:10px; background: ${themeColor}; color:white; margin:6px 0;"><span style="background:${g.color};width:18px;height:18px;border-radius:50%"></span> ${g.name}</button>`; }); inner += `<button class="big-btn" style="background:#aaa" data-gid="">✖ 取消</button></div></div>`; overlay.innerHTML = inner; document.body.appendChild(overlay); overlay.querySelectorAll('.big-btn').forEach(btn => { btn.onclick = async () => { const gid = btn.dataset.gid !== undefined && btn.dataset.gid !== '' ? parseInt(btn.dataset.gid) : null; document.body.removeChild(overlay); if(gid !== null || btn.dataset.gid === ''){ card.groupId = gid; await dbPut('wordcards', card); window.renderWordCardsView(); } }; }); };
 window.toggleBatch = () => { const el = document.getElementById('batch-area'); if(el) el.style.display = el.style.display==='none'?'block':'none'; };
-window.addWordGroup = function() { const name = prompt('分組名稱'); if(!name) return; const g = { name, color: '#FF6B6B', disabled: false }; dbPut('wordgroups',g).then(id=>{ g.id=id; wordGroups.push(g); window.openWordCardPanel(); }); };
-window.deleteGroup = async (gid) => { if(!confirm('刪除分組？字卡移至未分組')) return; wordCards.filter(c=>c.groupId===gid).forEach(async c=>{ c.groupId=null; await dbPut('wordcards',c); }); await dbDelete('wordgroups',gid); wordGroups = wordGroups.filter(g=>g.id!==gid); window.openWordCardPanel(); };
-window.editWordCard = async (id) => { const c=wordCards.find(c=>c.id===id); if(!c) return; const text=prompt('修改內容',c.text); if(text){ c.text=text; await dbPut('wordcards',c); window.openWordCardPanel(); } };
-window.deleteWordCard = async (id) => { if(!confirm('刪除字卡？')) return; await dbDelete('wordcards',id); wordCards = wordCards.filter(c=>c.id!==id); window.openWordCardPanel(); };
-window.editGroupName = async (gid) => { const g=wordGroups.find(g=>g.id===gid); if(!g) return; const name=prompt('修改名稱',g.name); if(name){ g.name=name; await dbPut('wordgroups',g); window.openWordCardPanel(); } };
+window.addWordGroup = function() { const name = prompt('分組名稱'); if(!name) return; const g = { name, color: '#FF6B6B', disabled: false }; dbPut('wordgroups',g).then(id=>{ g.id=id; wordGroups.push(g); window.renderWordCardsView(); }); };
+window.deleteGroup = async (gid) => { if(!confirm('刪除分組？字卡移至未分組')) return; wordCards.filter(c=>c.groupId===gid).forEach(async c=>{ c.groupId=null; await dbPut('wordcards',c); }); await dbDelete('wordgroups',gid); wordGroups = wordGroups.filter(g=>g.id!==gid); window.renderWordCardsView(); };
+window.editWordCard = async (id) => { const c=wordCards.find(c=>c.id===id); if(!c) return; const text=prompt('修改內容',c.text); if(text){ c.text=text; await dbPut('wordcards',c); window.renderWordCardsView(); } };
+window.deleteWordCard = async (id) => { if(!confirm('刪除字卡？')) return; await dbDelete('wordcards',id); wordCards = wordCards.filter(c=>c.id!==id); window.renderWordCardsView(); };
+window.editGroupName = async (gid) => { const g=wordGroups.find(g=>g.id===gid); if(!g) return; const name=prompt('修改名稱',g.name); if(name){ g.name=name; await dbPut('wordgroups',g); window.renderWordCardsView(); } };
 window.exportWordCards = () => downloadFile('wordcards.json', JSON.stringify(wordCards.map(c=>({text:c.text, groupId:c.groupId, color:c.color, disabled:c.disabled}))));
-window.batchAddWordCardsWithDedup = async () => { const ta = document.getElementById('batch-textarea'); if(!ta || !ta.value.trim()) { showToast('請輸入字卡內容'); return; } const lines = ta.value.trim().split('\n').filter(l=>l.trim()); const unique = [...new Set(lines.map(l=>l.trim()))]; const gid = document.getElementById('batch-group-select')?.value ? parseInt(document.getElementById('batch-group-select').value) : null; let newCount=0; for(const txt of unique){ if(!wordCards.find(c=>c.text===txt)){ const card = { text:txt, groupId:gid, color:null, frequency:0, disabled:false }; const id = await dbPut('wordcards',card); card.id=id; wordCards.push(card); newCount++; } } showToast(`新增 ${newCount} 個字卡`); window.openWordCardPanel(); };
-window.batchImportWordCards = () => { const input = document.createElement('input'); input.type='file'; input.accept='.json'; input.onchange = async e => { const file=e.target.files[0]; if(!file) return; const text=await file.text(); try{ const data=JSON.parse(text); if(!Array.isArray(data)) throw new Error(); let added=0; for(const item of data){ if(!wordCards.find(c=>c.text===item.text)){ const card = { text:item.text, groupId:item.groupId||null, color:item.color||null, frequency:0, disabled:item.disabled||false }; const id=await dbPut('wordcards',card); card.id=id; wordCards.push(card); added++; } } showToast(`導入完成，新增 ${added} 個字卡`); window.openWordCardPanel(); } catch(err){ showToast('JSON格式錯誤'); } }; input.click(); };
-
-window.openEmojiPanel = () => { 
-    openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>😀 Emoji庫</h3>
-    <input id="emoji-input" placeholder="輸入單個emoji"><button onclick="window.addEmoji()">添加</button>
-    <div style="margin-top:10px;"><button onclick="window.toggleBatchEmoji()">📝 批量添加Emoji (每行一個)</button></div>
-    <div id="batch-emoji-area" class="batch-emoji-area"><textarea id="batch-emoji-text" rows="3" placeholder="😀\n😂\n🥰"></textarea><button onclick="window.batchAddEmojisFromText()">✅ 批量加入</button></div>
-    <div class="emoji-grid">${emojis.map(e=>`<span onclick="window.deleteEmojiConfirm(${e.id})">${e.char}</span>`).join('')}</div>`);
-};
+window.batchAddWordCardsWithDedup = async () => { const ta = document.getElementById('batch-textarea'); if(!ta || !ta.value.trim()) { showToast('請輸入字卡內容'); return; } const lines = ta.value.trim().split('\n').filter(l=>l.trim()); const unique = [...new Set(lines.map(l=>l.trim()))]; const gid = document.getElementById('batch-group-select')?.value ? parseInt(document.getElementById('batch-group-select').value) : null; let newCount=0; for(const txt of unique){ if(!wordCards.find(c=>c.text===txt)){ const card = { text:txt, groupId:gid, color:null, frequency:0, disabled:false }; const id = await dbPut('wordcards',card); card.id=id; wordCards.push(card); newCount++; } } showToast(`新增 ${newCount} 個字卡`); window.renderWordCardsView(); };
+window.batchImportWordCards = () => { const input = document.createElement('input'); input.type='file'; input.accept='.json'; input.onchange = async e => { const file=e.target.files[0]; if(!file) return; const text=await file.text(); try{ const data=JSON.parse(text); if(!Array.isArray(data)) throw new Error(); let added=0; for(const item of data){ if(!wordCards.find(c=>c.text===item.text)){ const card = { text:item.text, groupId:item.groupId||null, color:item.color||null, frequency:0, disabled:item.disabled||false }; const id=await dbPut('wordcards',card); card.id=id; wordCards.push(card); added++; } } showToast(`導入完成，新增 ${added} 個字卡`); window.renderWordCardsView(); } catch(err){ showToast('JSON格式錯誤'); } }; input.click(); };
+window.openEmojiPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>😀 Emoji庫</h3><input id="emoji-input" placeholder="輸入單個emoji"><button onclick="window.addEmoji()">添加</button><div style="margin-top:10px;"><button onclick="window.toggleBatchEmoji()">📝 批量添加Emoji (每行一個)</button></div><div id="batch-emoji-area" class="batch-emoji-area"><textarea id="batch-emoji-text" rows="3" placeholder="😀\n😂\n🥰"></textarea><button onclick="window.batchAddEmojisFromText()">✅ 批量加入</button></div><div class="emoji-grid">${emojis.map(e=>`<span onclick="window.deleteEmojiConfirm(${e.id})">${e.char}</span>`).join('')}</div>`); };
 window.toggleBatchEmoji = () => { const el = document.getElementById('batch-emoji-area'); if(el) el.style.display = el.style.display==='none'?'block':'none'; };
 window.batchAddEmojisFromText = async () => { const ta = document.getElementById('batch-emoji-text'); if(!ta || !ta.value.trim()) { showToast('請輸入Emoji，每行一個'); return; } const lines = ta.value.trim().split('\n').filter(l=>l.trim()); let added=0; for(const line of lines){ const em = line.trim(); if(em && !emojis.some(e=>e.char===em)){ const newEm = { char: em }; const id = await dbPut('emojis', newEm); newEm.id = id; emojis.push(newEm); added++; } } showToast(`成功新增 ${added} 個Emoji`); window.openEmojiPanel(); };
 window.addEmoji = async () => { const inp=document.getElementById('emoji-input'); if(!inp||!inp.value.trim()) return; const ch = inp.value.trim(); if(!emojis.some(e=>e.char===ch)){ const e={char:ch}; const id=await dbPut('emojis',e); e.id=id; emojis.push(e); } window.openEmojiPanel(); };
 window.deleteEmojiConfirm = async (id) => { if(confirm('刪除？')){ await dbDelete('emojis',id); emojis=emojis.filter(e=>e.id!==id); window.openEmojiPanel(); } };
-
-window.openStickerHubPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>🖼️ 表情圖庫</h3><button class="big-btn" onclick="window.openStickerMgmtPanel('other')">對方的表情圖</button><button class="big-btn" onclick="window.openStickerMgmtPanel('self')">我的表情圖</button>`); };
-window.openStickerMgmtPanel = (owner) => { const filterStickers = stickers.filter(s=>s.owner===owner); openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openStickerHubPanel()">←表情圖庫</button><h3>${owner==='self'?'我的':'對方的'}表情圖</h3><input type="file" accept="image/*" id="mgmt-sticker-input" multiple><button onclick="window.importMgmtStickers('${owner}')">導入圖片</button><div class="sticker-grid">${filterStickers.map(s=>`<img src="${s.data}" onclick="window.deleteStickerConfirm(${s.id})">`).join('')}</div>`); };
-window.importMgmtStickers = async (owner) => { const input=document.getElementById('mgmt-sticker-input'); if(!input||!input.files.length) return; for(const f of input.files){ const data=await readFileAsDataURL(f); const s={name:f.name,data,owner,timestamp:Date.now()}; const id=await dbPut('stickers',s); s.id=id; stickers.push(s); } window.openStickerMgmtPanel(owner); };
-window.deleteStickerConfirm = async (id) => { if(confirm('刪除表情？')){ await dbDelete('stickers',id); stickers=stickers.filter(s=>s.id!==id); window.openStickerHubPanel(); } };
-window.openStickerPanel = (owner) => { const filterStickers = stickers.filter(s=>s.owner===owner); let html=`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>📸 傳送表情</h3><div class="sticker-grid">`; filterStickers.forEach(s=> html+=`<img src="${s.data}" onclick="window.sendSticker(${s.id})">`); html+=`</div>`; openPanel(html); };
-window.sendSticker = async (id) => { const s=stickers.find(s=>s.id===id); if(!s) return; const msg={type:'self',content:'',timestamp:Date.now(),imageData:s.data,deleted:false}; const mid=await dbPut('messages',msg); msg.id=mid; messages.push(msg); renderChat(); closePanel(); simulateReply(); };
+window.openStickerMgmtPanel = (owner) => { const filterStickers = stickers.filter(s=>s.owner===owner); openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>${owner==='self'?'我的':'對方的'}表情圖</h3><input type="file" accept="image/*" id="mgmt-sticker-input" multiple><button onclick="window.importMgmtStickers('${owner}')">導入圖片</button><div class="sticker-grid">${filterStickers.map(s=>`<img src="${s.data}" onclick="window.deleteStickerConfirm(${s.id})">`).join('')}</div>`); };
+window.importMgmtStickers = async (owner) => { const input=document.getElementById('mgmt-sticker-input'); if(!input||!input.files.length) return; for(const f of input.files){ const data=await readFileAsDataURL(f); const s={name:f.name,data,owner,timestamp:Date.now()}; const id=await dbPut('stickers',s); s.id=id; stickers.push(s); } window.openStickerMgmtPanel(owner); if(owner==='self'||owner==='other') refreshDrawerContent(); };
+window.deleteStickerConfirm = async (id) => { if(confirm('刪除表情？')){ await dbDelete('stickers',id); stickers=stickers.filter(s=>s.id!==id); window.openStickerMgmtPanel(stickers.find(s=>s.id===id)?.owner||'self'); refreshDrawerContent(); } };
 window.openReplyRhythmPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>回覆節奏</h3><div class="setting-row"><label>自動傳送(分鐘,0=關)</label><input type="number" id="set-auto-interval" value="${autoSendInterval}"></div><div class="setting-row"><label>最短延遲(秒)</label><input type="number" id="set-min-delay" value="${minReplyDelay}"></div><div class="setting-row"><label>最長延遲(秒)</label><input type="number" id="set-max-delay" value="${maxReplyDelay}"></div><button onclick="window.saveRhythm()">儲存</button>`); };
 window.saveRhythm = async () => { autoSendInterval = parseInt(document.getElementById('set-auto-interval')?.value)||0; minReplyDelay = parseInt(document.getElementById('set-min-delay')?.value)||1; maxReplyDelay = parseInt(document.getElementById('set-max-delay')?.value)||5; await saveSetting('autoSendInterval',autoSendInterval); await saveSetting('minReplyDelay',minReplyDelay); await saveSetting('maxReplyDelay',maxReplyDelay); setupAutoSend(); closePanel(); showToast('節奏已更新'); };
 window.openStatsPanel = () => { const active = getActiveWordCards(); const sorted = [...active].sort((a,b)=> (b.frequency||0)-(a.frequency||0)); const top5 = sorted.slice(0,5); const lowest = [...active].sort((a,b)=> (a.frequency||0)-(b.frequency||0)).slice(0,5); let html = `<button class="close-panel" onclick="window.closePanel()">✕</button><button onclick="window.openReplyMgmtPanel()">←回覆管理</button><h3>🏆 頻率統計 (僅啟用字卡)</h3><h4>📈 最常用</h4><ol>`; if(top5.length) top5.forEach(c=> html+=`<li>${c.text} (${c.frequency||0})</li>`); else html+=`<li>無</li>`; html+=`</ol><h4>📉 最少使用</h4><ol>`; if(lowest.length) lowest.forEach(c=> html+=`<li>${c.text} (${c.frequency||0})</li>`); else html+=`<li>無</li>`; html+=`</ol>`; openPanel(html); };
-window.openAppearancePanel = () => { let html=`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>🎨 外觀設定</h3><div class="setting-row"><label>主題色</label><input type="color" id="set-theme-color" value="${themeColor}"></div><div class="setting-row"><label>聊天背景色</label><input type="color" id="set-chatbg-color" value="${chatBgColor}"></div><div class="setting-row"><label>聊天背景圖</label><input type="file" id="set-chatbg-image"></div><div class="setting-row"><label>我的氣泡</label><input type="color" id="set-bubble-self" value="${bubbleSelf}"></div><div class="setting-row"><label>對方氣泡</label><input type="color" id="set-bubble-other" value="${bubbleOther}"></div><button onclick="window.saveSettings()">儲存外觀</button><button onclick="window.exportAll()">📦 匯出全部</button><button style="background:#e74c3c" onclick="window.clearAll()">⚠️ 清除全部</button>`; openPanel(html); };
+window.openAppearancePanel = () => { let html=`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>🎨 外觀設定</h3><div class="setting-row"><label>主題色</label><input type="color" id="set-theme-color" value="${themeColor}"></div><div class="setting-row"><label>聊天背景色</label><input type="color" id="set-chatbg-color" value="${chatBgColor}"></div><div class="setting-row"><label>聊天背景圖</label><input type="file" id="set-chatbg-image"></div><div class="setting-row"><label>我的氣泡</label><input type="color" id="set-bubble-self" value="${bubbleSelf}"></div><div class="setting-row"><label>對方氣泡</label><input type="color" id="set-bubble-other" value="${bubbleOther}"></div><div class="setting-row"><label>對方頭像</label><button class="big-btn" style="margin:0; padding:8px;" onclick="window.changeOtherAvatar()">📷 更換頭像</button></div><button onclick="window.saveSettings()">儲存外觀</button><button onclick="window.exportAll()">📦 匯出全部</button><button style="background:#e74c3c" onclick="window.clearAll()">⚠️ 清除全部</button>`; openPanel(html); };
+window.changeOtherAvatar = () => { const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange = async e => { const file=e.target.files[0]; if(file){ const dataUrl=await readFileAsDataURL(file); otherAvatar=dataUrl; otherAvatarImg.src=dataUrl; await saveSetting('otherAvatar',otherAvatar); showToast('頭像已更新'); closePanel(); } }; inp.click(); };
 window.saveSettings = async () => { themeColor = document.getElementById('set-theme-color')?.value||themeColor; chatBgColor = document.getElementById('set-chatbg-color')?.value||chatBgColor; bubbleSelf = document.getElementById('set-bubble-self')?.value||bubbleSelf; bubbleOther = document.getElementById('set-bubble-other')?.value||bubbleOther; const bgImg = document.getElementById('set-chatbg-image'); if(bgImg&&bgImg.files[0]) chatBgImage = await readFileAsDataURL(bgImg.files[0]); await saveSetting('themeColor',themeColor); await saveSetting('chatBgColor',chatBgColor); await saveSetting('chatBgImage',chatBgImage); await saveSetting('bubbleSelf',bubbleSelf); await saveSetting('bubbleOther',bubbleOther); applyTheme(); closePanel(); showToast('外觀已更新'); };
 window.openMainSettingsPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>設定</h3><button class="big-btn" onclick="window.openAppearancePanel()">🎨 外觀設定</button><button class="big-btn" onclick="window.openReplyMgmtPanel()">📋 回覆管理</button><button class="big-btn" onclick="window.openStatusPanel()">📌 狀態庫</button>`); };
 window.openStatusPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>狀態庫</h3><input id="status-input" placeholder="狀態文字"><button onclick="window.addStatus()">添加</button><div>${statuses.map(s=>`<div class="card-item"><span>${s.text}</span><div class="action-buttons"><button onclick="window.deleteStatus(${s.id})">🗑️</button></div></div>`).join('')}</div>`); };
@@ -365,24 +319,6 @@ window.exportAll = () => downloadFile('backup.json', JSON.stringify({wordGroups,
 window.editOtherName = async () => { const name = prompt('修改對方名稱', otherName); if(name){ otherName=name; document.getElementById('other-name').textContent=name; await saveSetting('otherName',name); } };
 window.clearAll = () => { if(confirm('清除所有資料？無法復原')){ indexedDB.deleteDatabase(DB_NAME); location.reload(); } };
 
-// 头像设置（手机相册）
-otherAvatarImg.onclick = () => { 
-    const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; 
-    inp.onchange = async e => { 
-        const file = e.target.files[0]; 
-        if(file){ 
-            try {
-                const dataUrl = await readFileAsDataURL(file); 
-                otherAvatar = dataUrl; 
-                otherAvatarImg.src = dataUrl; 
-                await saveSetting('otherAvatar', otherAvatar); 
-                showToast('頭像已更新');
-            } catch(err) { showToast('頭像設置失敗'); }
-        } 
-    }; 
-    inp.click(); 
-};
-
 async function init() { 
     await openDB(); 
     await loadAllData(); 
@@ -390,14 +326,15 @@ async function init() {
     renderChat(); 
     setupAutoSend(); 
     setupBoardChecker(); 
+    document.getElementById('btn-calendar').onclick = () => openCalendarPanel();
     document.getElementById('btn-board-top').onclick = () => window.openBoardPanel();
     document.getElementById('btn-settings-top').onclick = () => window.openMainSettingsPanel();
-    document.getElementById('sticker-btn').onclick = () => window.openStickerPanel('self');
+    document.getElementById('sticker-btn').onclick = () => openStickerDrawer();
     document.getElementById('other-name').onclick = () => window.editOtherName();
     document.getElementById('send-btn').onclick = () => sendMessage();
     document.getElementById('cancel-quote-btn').onclick = () => cancelQuote();
     msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    showToast('✅ 專屬空間已啟動 | 點擊分組標題可展開/折疊');
+    showToast('✅ 專屬空間已啟動 | 表情圖庫在底部');
 }
 init();
 })();
