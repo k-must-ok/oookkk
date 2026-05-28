@@ -181,10 +181,87 @@ function setQuote(m) { quoteMsg = m; let displayText = m.content; if(!displayTex
 function cancelQuote() { quoteMsg = null; quoteBar.classList.remove('active'); }
 async function sendMessage() { const text = msgInput.value.trim(); if(!text && !quoteMsg) return; const finalContent = text || ''; const msg = { type:'self', content:finalContent, timestamp:Date.now(), quoteText:quoteMsg ? (quoteMsg.content || (quoteMsg.imageData ? '[圖片]' : '')) : null, quoteId:quoteMsg ? quoteMsg.id : null, deleted:false }; const id = await dbPut('messages',msg); msg.id = id; messages.push(msg); msgInput.value = ''; cancelQuote(); renderChat(); simulateReply(); }
 function getActiveWordCards() { return wordCards.filter(card => { if(card.disabled) return false; if(card.groupId) { const group = wordGroups.find(g => g.id === card.groupId); if(group && group.disabled) return false; } return true; }); }
-function buildRandomReply() { const modes = []; const activeCards = getActiveWordCards(); if(activeCards.length) modes.push('wordcard'); if(emojis.length) modes.push('emoji'); if(stickers.filter(s=>s.owner==='other').length) modes.push('sticker'); if(!modes.length) return null; const mode = modes[Math.floor(Math.random()*modes.length)]; let quoteText=null, quoteId=null; if(Math.random()<0.3 && messages.length){ const recent = messages.filter(m=>m.type==='self'&&!m.deleted).slice(-5); if(recent.length){ const ref = recent[Math.floor(Math.random()*recent.length)]; quoteText=ref.content || (ref.imageData?'[圖片]':''); quoteId=ref.id; } } if(mode==='sticker'){ const others = stickers.filter(s=>s.owner==='other'); if(others.length){ const s = others[Math.floor(Math.random()*others.length)]; return {content:'', imageData:s.data, quoteText, quoteId}; } } if(mode==='wordcard'){ const cnt=1+Math.floor(Math.random()*4); const picks=[]; for(let i=0;i<cnt;i++){ const wc = activeCards[Math.floor(Math.random()*activeCards.length)]; picks.push(wc.text); wc.frequency=(wc.frequency||0)+1; dbPut('wordcards',wc); } let res=picks.join('、'); if(emojis.length&&Math.random()<0.4){ const ec=1+Math.floor(Math.random()*2); for(let i=0;i<ec;i++) res+=' '+emojis[Math.floor(Math.random()*emojis.length)].char; } return {content:res,quoteText,quoteId}; } if(mode==='emoji'){ const cnt=1+Math.floor(Math.random()*4); let res=''; for(let i=0;i<cnt;i++) res+=emojis[Math.floor(Math.random()*emojis.length)].char+' '; return {content:res.trim(),quoteText,quoteId}; } return null; }
+function buildRandomReply() { 
+    const modes = []; 
+    const activeCards = getActiveWordCards(); 
+    if(activeCards.length) modes.push('wordcard'); 
+    if(emojis.length) modes.push('emoji'); 
+    if(stickers.filter(s=>s.owner==='other').length) modes.push('sticker'); 
+    if(!modes.length) return null; 
+    const mode = modes[Math.floor(Math.random()*modes.length)]; 
+    let quoteText=null, quoteId=null; 
+    if(Math.random()<0.3 && messages.length){ 
+        const allSelfMessages = messages.filter(m=>m.type==='self' && !m.deleted);
+        if(allSelfMessages.length){ 
+            const ref = allSelfMessages[Math.floor(Math.random()*allSelfMessages.length)]; 
+            quoteText = ref.content || (ref.imageData?'[圖片]':''); 
+            quoteId = ref.id; 
+        } 
+    } 
+    if(mode==='sticker'){ 
+        const others = stickers.filter(s=>s.owner==='other'); 
+        if(others.length){ 
+            const s = others[Math.floor(Math.random()*others.length)]; 
+            return {content:'', imageData:s.data, quoteText, quoteId}; 
+        } 
+    } 
+    if(mode==='wordcard'){ 
+        const cnt=1+Math.floor(Math.random()*4); const picks=[]; 
+        for(let i=0;i<cnt;i++){ 
+            const wc = activeCards[Math.floor(Math.random()*activeCards.length)]; 
+            picks.push(wc.text); 
+            wc.frequency=(wc.frequency||0)+1; 
+            dbPut('wordcards',wc); 
+        } 
+        let res=picks.join('、'); 
+        if(emojis.length&&Math.random()<0.4){ 
+            const ec=1+Math.floor(Math.random()*2); 
+            for(let i=0;i<ec;i++) res+=' '+emojis[Math.floor(Math.random()*emojis.length)].char; 
+        } 
+        return {content:res,quoteText,quoteId}; 
+    } 
+    if(mode==='emoji'){ 
+        const cnt=1+Math.floor(Math.random()*4); let res=''; 
+        for(let i=0;i<cnt;i++) res+=emojis[Math.floor(Math.random()*emojis.length)].char+' '; 
+        return {content:res.trim(),quoteText,quoteId}; 
+    } 
+    return null; 
+}
 function simulateReply() { showTyping(); const delay = (minReplyDelay + Math.random()*(maxReplyDelay-minReplyDelay))*1000; clearTimeout(typingTimeout); typingTimeout = setTimeout(async () => { const reply = buildRandomReply(); if(reply){ const msg = { type:'other', content:reply.content||'', timestamp:Date.now(), imageData:reply.imageData||null, quoteText:reply.quoteText||null, quoteId:reply.quoteId||null, deleted:false }; const id = await dbPut('messages',msg); msg.id=id; messages.push(msg); renderChat(); } hideTyping(); }, delay); }
 function setupAutoSend() { clearInterval(autoSendTimer); if(autoSendInterval>0) autoSendTimer = setInterval(simulateReply, autoSendInterval*60000); }
-function setupBoardChecker() { setInterval(async () => { const entries = await dbGetAll('board'); const now = Date.now(); for(const e of entries){ if(e.replied) continue; if(!e.replyAt) e.replyAt = now+2*3600000+Math.random()*10*3600000; if(now>=e.replyAt && !e.replied){ e.replied=true; await dbPut('board',e); const reply = buildRandomReply(); if(reply){ e.replyContent='📝回覆留言：'+(reply.content||''); await dbPut('board',e); const msg = { type:'other', content:e.replyContent, timestamp:Date.now(), quoteText:e.content, imageData:reply.imageData||null, deleted:false }; const id=await dbPut('messages',msg); msg.id=id; messages.push(msg); renderChat(); showToast('對方回覆了留言'); } } } },30000); }
+// 留言板回覆延迟：最短3小时，最长9小时（随机毫秒）
+function setupBoardChecker() { 
+    setInterval(async () => { 
+        const entries = await dbGetAll('board'); 
+        const now = Date.now(); 
+        for(const e of entries){ 
+            if(e.replied) continue; 
+            if(!e.replyAt) { 
+                // 随机 3~9 小时（毫秒）
+                const minDelayMs = 3 * 3600000;
+                const maxDelayMs = 9 * 3600000;
+                const randomDelay = minDelayMs + Math.random() * (maxDelayMs - minDelayMs);
+                e.replyAt = now + randomDelay; 
+                await dbPut('board', e);
+            } 
+            if(now >= e.replyAt && !e.replied){ 
+                e.replied=true; 
+                await dbPut('board',e); 
+                const reply = buildRandomReply(); 
+                if(reply){ 
+                    e.replyContent='📝回覆留言：'+(reply.content||''); 
+                    await dbPut('board',e); 
+                    const msg = { type:'other', content:e.replyContent, timestamp:Date.now(), quoteText:e.content, imageData:reply.imageData||null, deleted:false }; 
+                    const id=await dbPut('messages',msg); 
+                    msg.id=id; 
+                    messages.push(msg); 
+                    renderChat(); 
+                    showToast('對方回覆了留言'); 
+                } 
+            } 
+        } 
+    }, 30000); 
+}
 function closePanel() { panelOverlay.classList.remove('active'); panelContent.innerHTML = ''; }
 function openPanel(html) { panelContent.innerHTML = html; panelOverlay.classList.add('active'); }
 panelOverlay.addEventListener('click', e => { if(e.target===panelOverlay) closePanel(); });
@@ -275,9 +352,8 @@ window.scrollToMessage = scrollToMessage;
 window.sendSticker = async (id) => { const s=stickers.find(s=>s.id===id); if(!s) return; const msg={type:'self',content:'',timestamp:Date.now(),imageData:s.data,deleted:false}; const mid=await dbPut('messages',msg); msg.id=mid; messages.push(msg); renderChat(); closeStickerDrawer(); simulateReply(); };
 window.sendStickerFromOther = async (id) => { const s=stickers.find(s=>s.id===id); if(!s) return; const msg={type:'self',content:'',timestamp:Date.now(),imageData:s.data,deleted:false}; const mid=await dbPut('messages',msg); msg.id=mid; messages.push(msg); renderChat(); closeStickerDrawer(); simulateReply(); };
 
-// 导入回复库等其余函数 (保持原有逻辑，因篇幅省略部分相同代码，但核心功能保留)
-// 由于代码长度限制，此处继续整合原有完整函数，确保所有功能正常
-window.importFullReplyLibrary = () => { /* 完整实现同之前，略写但保留功能，实际运行无碍 */ 
+// 导入回复库等其余函数 (完整保留，篇幅所限仅核心，实际运行完整)
+window.importFullReplyLibrary = () => {
     const input = document.createElement('input'); input.type='file'; input.accept='.json';
     input.onchange = async e => { const file=e.target.files[0]; if(!file) return; try{ const text=await file.text(); const data=JSON.parse(text); let repliesList=data.customReplies||data.replies||[]; let emojiList=data.customEmojis||data.emojis||[]; let groupsList=data.customReplyGroups||data.groups||[]; const existingGroupMap=new Map(wordGroups.map(g=>[g.name,g])); const groupNameToId=new Map(); for(const g of groupsList){ if(existingGroupMap.has(g.name)) groupNameToId.set(g.name,existingGroupMap.get(g.name).id); else{ const newGroup={name:g.name,color:g.color||'#6B7FD6',disabled:false}; const newId=await dbPut('wordgroups',newGroup); newGroup.id=newId; wordGroups.push(newGroup); groupNameToId.set(g.name,newId); } } wordGroups=await dbGetAll('wordgroups'); const textToGroup=new Map(); for(const g of groupsList){ const targetId=groupNameToId.get(g.name); if(g.items) for(const item of g.items) textToGroup.set(item,targetId); } const allTexts=new Set([...repliesList,...groupsList.flatMap(g=>g.items||[])]); let addedCount=0; for(const txt of allTexts){ if(!wordCards.find(c=>c.text===txt)){ const groupId=textToGroup.get(txt)||null; const newCard={text:txt,groupId:groupId,color:null,frequency:0,disabled:false}; const id=await dbPut('wordcards',newCard); newCard.id=id; wordCards.push(newCard); addedCount++; } } let emojiAdded=0; for(const em of emojiList){ if(!emojis.some(e=>e.char===em)){ const newEm={char:em}; const id=await dbPut('emojis',newEm); newEm.id=id; emojis.push(newEm); emojiAdded++; } } await loadAllData(); applyTheme(); renderChat(false); showToast(`✅ 導入完成！新增字卡 ${addedCount} 個，新增表情 ${emojiAdded} 個`); if(panelOverlay.classList.contains('active')) closePanel(); } catch(err){ showToast('導入失敗：JSON 格式錯誤'); } }; input.click(); };
 window.openReplyMgmtPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>⚙️ 回覆管理</h3><button class="big-btn" onclick="window.openWordCardPanel()">📚 字卡庫</button><button class="big-btn" onclick="window.openEmojiPanel()">😀 Emoji庫</button><button class="big-btn" onclick="window.openStickerMgmtPanel('self')">🖼️ 我的表情圖</button><button class="big-btn" onclick="window.openStickerMgmtPanel('other')">🖼️ 對方的表情圖</button><button class="big-btn" onclick="window.openReplyRhythmPanel()">⏱️ 回覆節奏</button><button class="big-btn" onclick="window.openStatsPanel()">📊 字卡統計</button><button class="big-btn" style="background:#5f7f9e;" onclick="window.importFullReplyLibrary()">📥 導入完整回覆庫 (JSON)</button>`); };
@@ -334,7 +410,7 @@ async function init() {
     document.getElementById('send-btn').onclick = () => sendMessage();
     document.getElementById('cancel-quote-btn').onclick = () => cancelQuote();
     msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    showToast('✅ 專屬空間已啟動 | 表情圖庫在底部');
+    showToast('✅ 專屬空間已啟動 | 留言板回覆時間3～9小時隨機');
 }
 init();
 })();
