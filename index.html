@@ -44,12 +44,10 @@ body { display: flex; justify-content: center; align-items: center; }
 #quote-bar { display: none; padding: 8px 16px; background: #fff7e0; border-top: 1px solid #ffe6b3; font-size: 12px; align-items: center; gap: 12px; }
 #quote-bar.active { display: flex; }
 #quote-text { flex: 1; color: #b45f1b; font-style: italic; }
-/* 通用面板 (居中) */
 .panel-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
 .panel-overlay.active { display: flex; }
 .panel { width: 90%; max-width: 420px; max-height: 80vh; background: white; border-radius: 32px; overflow-y: auto; padding: 20px; animation: scaleIn 0.2s ease; box-shadow: 0 20px 35px rgba(0,0,0,0.3); }
 @keyframes scaleIn { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-/* 底部抽屉面板 (仅用于表情图库) */
 .bottom-drawer { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 430px; background: white; border-radius: 24px 24px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); z-index: 200; transform: translateY(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; max-height: 70vh; overflow: hidden; }
 .bottom-drawer.open { transform: translateY(0); }
 .drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #eee; font-weight: bold; background: white; }
@@ -107,9 +105,18 @@ body { display: flex; justify-content: center; align-items: center; }
 <div class="bottom-drawer" id="sticker-drawer">
     <div class="drawer-header"><span>📸 表情圖庫</span><button id="close-drawer">✕</button></div>
     <div class="drawer-content">
-        <div class="tab-bar"><button class="tab-btn active" data-tab="self">😀 我</button><button class="tab-btn" data-tab="other">👤 他</button></div>
-        <div id="drawer-tab-self" class="tab-content active"><div class="sticker-grid" id="self-stickers-grid"></div><div style="margin-top:12px;"><button class="big-btn" id="manage-self-stickers">📂 管理我的表情圖</button></div></div>
-        <div id="drawer-tab-other" class="tab-content"><div class="sticker-grid" id="other-stickers-grid"></div><div style="margin-top:12px;"><button class="big-btn" id="manage-other-stickers">📂 管理對方的表情圖</button></div></div>
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="self">😀 我</button>
+            <button class="tab-btn" data-tab="other">👤 他</button>
+        </div>
+        <div id="drawer-tab-self" class="tab-content active">
+            <div class="sticker-grid" id="self-stickers-grid"></div>
+            <div style="margin-top:12px;"><button class="big-btn" id="manage-self-stickers">📂 管理我的表情圖</button></div>
+        </div>
+        <div id="drawer-tab-other" class="tab-content">
+            <div class="sticker-grid" id="other-stickers-grid"></div>
+            <div style="margin-top:12px;"><button class="big-btn" id="manage-other-stickers">📂 管理對方的表情圖</button></div>
+        </div>
     </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -229,7 +236,7 @@ function buildRandomReply() {
 }
 function simulateReply() { showTyping(); const delay = (minReplyDelay + Math.random()*(maxReplyDelay-minReplyDelay))*1000; clearTimeout(typingTimeout); typingTimeout = setTimeout(async () => { const reply = buildRandomReply(); if(reply){ const msg = { type:'other', content:reply.content||'', timestamp:Date.now(), imageData:reply.imageData||null, quoteText:reply.quoteText||null, quoteId:reply.quoteId||null, deleted:false }; const id = await dbPut('messages',msg); msg.id=id; messages.push(msg); renderChat(); } hideTyping(); }, delay); }
 function setupAutoSend() { clearInterval(autoSendTimer); if(autoSendInterval>0) autoSendTimer = setInterval(simulateReply, autoSendInterval*60000); }
-// 留言板回覆延迟：最短3小时，最长9小时（随机毫秒）
+// 留言板回覆延迟：3~9小时随机
 function setupBoardChecker() { 
     setInterval(async () => { 
         const entries = await dbGetAll('board'); 
@@ -237,7 +244,6 @@ function setupBoardChecker() {
         for(const e of entries){ 
             if(e.replied) continue; 
             if(!e.replyAt) { 
-                // 随机 3~9 小时（毫秒）
                 const minDelayMs = 3 * 3600000;
                 const maxDelayMs = 9 * 3600000;
                 const randomDelay = minDelayMs + Math.random() * (maxDelayMs - minDelayMs);
@@ -249,9 +255,9 @@ function setupBoardChecker() {
                 await dbPut('board',e); 
                 const reply = buildRandomReply(); 
                 if(reply){ 
-                    e.replyContent='📝回覆留言：'+(reply.content||''); 
+                    e.replyContent = reply.content || (reply.imageData ? '📷 圖片回覆' : ''); 
                     await dbPut('board',e); 
-                    const msg = { type:'other', content:e.replyContent, timestamp:Date.now(), quoteText:e.content, imageData:reply.imageData||null, deleted:false }; 
+                    const msg = { type:'other', content:`📝回覆留言：${e.replyContent}`, timestamp:Date.now(), quoteText:e.content, imageData:reply.imageData||null, deleted:false }; 
                     const id=await dbPut('messages',msg); 
                     msg.id=id; 
                     messages.push(msg); 
@@ -266,7 +272,6 @@ function closePanel() { panelOverlay.classList.remove('active'); panelContent.in
 function openPanel(html) { panelContent.innerHTML = html; panelOverlay.classList.add('active'); }
 panelOverlay.addEventListener('click', e => { if(e.target===panelOverlay) closePanel(); });
 
-// 底部抽屉控制
 function openStickerDrawer() {
     refreshDrawerContent();
     stickerDrawer.classList.add('open');
@@ -292,7 +297,6 @@ drawerBackdrop.addEventListener('click', closeStickerDrawer);
 document.getElementById('close-drawer')?.addEventListener('click', closeStickerDrawer);
 document.getElementById('manage-self-stickers')?.addEventListener('click', () => { closeStickerDrawer(); setTimeout(() => window.openStickerMgmtPanel('self'), 100); });
 document.getElementById('manage-other-stickers')?.addEventListener('click', () => { closeStickerDrawer(); setTimeout(() => window.openStickerMgmtPanel('other'), 100); });
-// 标签页切换
 document.querySelectorAll('#sticker-drawer .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('#sticker-drawer .tab-btn').forEach(b => b.classList.remove('active'));
@@ -306,7 +310,6 @@ async function toggleCardDisabled(cardId) { const card = wordCards.find(c => c.i
 async function toggleGroupDisabled(groupId) { const group = wordGroups.find(g => g.id === groupId); if(group) { group.disabled = !group.disabled; await dbPut('wordgroups', group); window.renderWordCardsView(); showToast(group.disabled ? '分組已停用' : '分組已啟用'); } }
 function toggleGroup(gid) { if(expandedGroups.has(gid)) expandedGroups.delete(gid); else expandedGroups.add(gid); window.renderWordCardsView(); }
 
-// 月历日期跳转
 function openCalendarPanel() {
     const dateSet = new Set();
     messages.forEach(m => { if(!m.deleted) dateSet.add(formatDateYMD(m.timestamp)); });
@@ -352,7 +355,6 @@ window.scrollToMessage = scrollToMessage;
 window.sendSticker = async (id) => { const s=stickers.find(s=>s.id===id); if(!s) return; const msg={type:'self',content:'',timestamp:Date.now(),imageData:s.data,deleted:false}; const mid=await dbPut('messages',msg); msg.id=mid; messages.push(msg); renderChat(); closeStickerDrawer(); simulateReply(); };
 window.sendStickerFromOther = async (id) => { const s=stickers.find(s=>s.id===id); if(!s) return; const msg={type:'self',content:'',timestamp:Date.now(),imageData:s.data,deleted:false}; const mid=await dbPut('messages',msg); msg.id=mid; messages.push(msg); renderChat(); closeStickerDrawer(); simulateReply(); };
 
-// 导入回复库等其余函数 (完整保留，篇幅所限仅核心，实际运行完整)
 window.importFullReplyLibrary = () => {
     const input = document.createElement('input'); input.type='file'; input.accept='.json';
     input.onchange = async e => { const file=e.target.files[0]; if(!file) return; try{ const text=await file.text(); const data=JSON.parse(text); let repliesList=data.customReplies||data.replies||[]; let emojiList=data.customEmojis||data.emojis||[]; let groupsList=data.customReplyGroups||data.groups||[]; const existingGroupMap=new Map(wordGroups.map(g=>[g.name,g])); const groupNameToId=new Map(); for(const g of groupsList){ if(existingGroupMap.has(g.name)) groupNameToId.set(g.name,existingGroupMap.get(g.name).id); else{ const newGroup={name:g.name,color:g.color||'#6B7FD6',disabled:false}; const newId=await dbPut('wordgroups',newGroup); newGroup.id=newId; wordGroups.push(newGroup); groupNameToId.set(g.name,newId); } } wordGroups=await dbGetAll('wordgroups'); const textToGroup=new Map(); for(const g of groupsList){ const targetId=groupNameToId.get(g.name); if(g.items) for(const item of g.items) textToGroup.set(item,targetId); } const allTexts=new Set([...repliesList,...groupsList.flatMap(g=>g.items||[])]); let addedCount=0; for(const txt of allTexts){ if(!wordCards.find(c=>c.text===txt)){ const groupId=textToGroup.get(txt)||null; const newCard={text:txt,groupId:groupId,color:null,frequency:0,disabled:false}; const id=await dbPut('wordcards',newCard); newCard.id=id; wordCards.push(newCard); addedCount++; } } let emojiAdded=0; for(const em of emojiList){ if(!emojis.some(e=>e.char===em)){ const newEm={char:em}; const id=await dbPut('emojis',newEm); newEm.id=id; emojis.push(newEm); emojiAdded++; } } await loadAllData(); applyTheme(); renderChat(false); showToast(`✅ 導入完成！新增字卡 ${addedCount} 個，新增表情 ${emojiAdded} 個`); if(panelOverlay.classList.contains('active')) closePanel(); } catch(err){ showToast('導入失敗：JSON 格式錯誤'); } }; input.click(); };
@@ -389,7 +391,17 @@ window.openMainSettingsPanel = () => { openPanel(`<button class="close-panel" on
 window.openStatusPanel = () => { openPanel(`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>狀態庫</h3><input id="status-input" placeholder="狀態文字"><button onclick="window.addStatus()">添加</button><div>${statuses.map(s=>`<div class="card-item"><span>${s.text}</span><div class="action-buttons"><button onclick="window.deleteStatus(${s.id})">🗑️</button></div></div>`).join('')}</div>`); };
 window.addStatus = async () => { const inp = document.getElementById('status-input'); if(!inp||!inp.value.trim()) return; const s={text:inp.value.trim()}; const id=await dbPut('statuses',s); s.id=id; statuses.push(s); window.openStatusPanel(); pickRandomStatus(); };
 window.deleteStatus = async (id) => { await dbDelete('statuses',id); statuses=statuses.filter(s=>s.id!==id); window.openStatusPanel(); pickRandomStatus(); };
-window.openBoardPanel = () => { let html=`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>📌 留言板</h3><textarea id="board-msg" placeholder="留言..."></textarea><button onclick="window.submitBoard()">發送留言</button><hr>`; boardEntries.forEach(e=>{ html+=`<div style="background:#f7f7f7;padding:12px;border-radius:20px;margin:10px 0"><b>你：</b>${e.content}<div class="msg-time">${formatTime(e.timestamp)}</div>${e.replyContent?`<div style="background:#e9f0ff;padding:8px;border-radius:14px;margin-top:6px"><b>回覆：</b>${e.replyContent}</div>`:'<div style="color:#999">⏳ 等待回覆...</div>'}</div>`; }); openPanel(html); };
+window.openBoardPanel = () => { 
+    let html=`<button class="close-panel" onclick="window.closePanel()">✕</button><h3>📌 留言板</h3><textarea id="board-msg" placeholder="留言..."></textarea><button onclick="window.submitBoard()">發送留言</button><hr><div id="board-list">`;
+    boardEntries.forEach(e=>{ 
+        html+=`<div style="background:#f7f7f7;padding:12px;border-radius:20px;margin:10px 0">
+            <b>你：</b>${e.content}<div class="msg-time">${formatTime(e.timestamp)}</div>
+            ${e.replyContent ? `<div style="background:#e9f0ff;padding:8px;border-radius:14px;margin-top:6px"><b>回覆：</b>${e.replyContent}</div>` : '<div style="color:#999">⏳ 等待回覆...</div>'}
+        </div>`; 
+    });
+    html+=`</div></div>`;
+    openPanel(html); 
+};
 window.submitBoard = async () => { const ta = document.getElementById('board-msg'); if(!ta||!ta.value.trim()) return; const entry={content:ta.value.trim(),timestamp:Date.now(),replied:false}; const id=await dbPut('board',entry); entry.id=id; boardEntries.push(entry); window.openBoardPanel(); };
 window.exportAll = () => downloadFile('backup.json', JSON.stringify({wordGroups,wordCards,stickers,emojis,statuses,messages,board:boardEntries}));
 window.editOtherName = async () => { const name = prompt('修改對方名稱', otherName); if(name){ otherName=name; document.getElementById('other-name').textContent=name; await saveSetting('otherName',name); } };
